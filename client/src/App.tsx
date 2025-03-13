@@ -7,6 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
 import Contact from "@/pages/Contact";
+import NewCollection from "@/pages/NewCollection";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -18,6 +19,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/admin" component={Admin} />
           <Route path="/contact" component={Contact} />
+          <Route path="/new-collection" component={NewCollection} />
           <Route component={NotFound} />
         </Switch>
       </main>

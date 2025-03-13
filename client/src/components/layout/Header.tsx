@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,21 +12,30 @@ const Logo = () => (
   </svg>
 );
 
-const NavLinks = ({ className = "" }) => (
+interface NavLinksProps {
+  className?: string;
+  onClick?: () => void;
+}
+
+const NavLinks = ({ className = "", onClick }: NavLinksProps) => (
   <nav className={className}>
-    <Link href="/">
+    <Link href="/" onClick={onClick}>
       <span className="hover:text-primary cursor-pointer">Home</span>
     </Link>
-    <Link href="/new-collection">
+    <Link href="/new-collection" onClick={onClick}>
       <span className="hover:text-primary cursor-pointer">New Collection</span>
     </Link>
-    <Link href="/contact">
+    <Link href="/contact" onClick={onClick}>
       <span className="hover:text-primary cursor-pointer">Contact</span>
     </Link>
   </nav>
 );
 
 export function Header() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleClose = () => setIsOpen(false);
+
   return (
     <header className="border-b">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -39,14 +49,17 @@ export function Header() {
         <NavLinks className="hidden md:flex space-x-8" />
 
         {/* Mobile Navigation */}
-        <Sheet>
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
           <SheetContent>
-            <NavLinks className="flex flex-col space-y-4 mt-8" />
+            <NavLinks 
+              className="flex flex-col space-y-4 mt-8" 
+              onClick={handleClose}
+            />
           </SheetContent>
         </Sheet>
       </div>
