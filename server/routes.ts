@@ -3,6 +3,7 @@ import { createServer } from "http";
 import { storage } from "./storage";
 import multer from "multer";
 import { insertProductSchema } from "@shared/schema";
+import { fromZodError } from "zod-validation-error";
 
 // Configure multer for in-memory file storage
 const upload = multer({
@@ -39,13 +40,21 @@ export async function registerRoutes(app: Express) {
         ) : [],
         sizes: JSON.parse(req.body.sizes || "[]"),
         colors: JSON.parse(req.body.colors || "[]"),
+        isNewCollection: req.body.isNewCollection === "true"
       });
 
       const product = await storage.createProduct(productData);
       res.json(product);
     } catch (error) {
       console.error("Error creating product:", error);
-      res.status(400).json({ message: "Invalid product data" });
+      if (error instanceof Error) {
+        res.status(400).json({ 
+          message: "Invalid product data", 
+          details: error.message 
+        });
+      } else {
+        res.status(400).json({ message: "Invalid product data" });
+      }
     }
   });
 

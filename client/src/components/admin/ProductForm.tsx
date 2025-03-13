@@ -12,6 +12,9 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+const availableSizes = ["XS", "S", "M", "L", "XL", "XXL"] as const;
+const availableColors = ["Black", "White", "Red", "Blue", "Green", "Pink", "Purple", "Yellow"] as const;
+
 export function ProductForm() {
   const { toast } = useToast();
   const form = useForm<InsertProduct>({
@@ -28,8 +31,27 @@ export function ProductForm() {
   });
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (data: FormData) => {
-      const res = await apiRequest("POST", "/api/products", data);
+    mutationFn: async (data: InsertProduct) => {
+      const formData = new FormData();
+
+      // Add text fields
+      formData.append("name", data.name);
+      formData.append("description", data.description);
+      formData.append("category", data.category);
+      formData.append("isNewCollection", String(data.isNewCollection));
+
+      // Add arrays as JSON strings
+      formData.append("sizes", JSON.stringify(data.sizes));
+      formData.append("colors", JSON.stringify(data.colors));
+
+      // Add images
+      if (Array.isArray(data.images)) {
+        data.images.forEach((file) => {
+          formData.append("images", file);
+        });
+      }
+
+      const res = await apiRequest("POST", "/api/products", formData);
       return res.json();
     },
     onSuccess: () => {
@@ -39,7 +61,7 @@ export function ProductForm() {
       });
       form.reset();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
         description: error.message,
@@ -49,19 +71,7 @@ export function ProductForm() {
   });
 
   function onSubmit(data: InsertProduct) {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (key === "images") {
-        Array.from(value).forEach((file) => {
-          formData.append("images", file);
-        });
-      } else if (Array.isArray(value)) {
-        formData.append(key, JSON.stringify(value));
-      } else {
-        formData.append(key, value.toString());
-      }
-    });
-    mutate(formData);
+    mutate(data);
   }
 
   return (
@@ -115,6 +125,78 @@ export function ProductForm() {
                   ))}
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="sizes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Available Sizes</FormLabel>
+              <div className="flex flex-wrap gap-2">
+                {availableSizes.map((size) => (
+                  <FormField
+                    key={size}
+                    control={form.control}
+                    name="sizes"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-1">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value?.includes(size)}
+                            onCheckedChange={(checked) => {
+                              const updatedSizes = checked
+                                ? [...(field.value || []), size]
+                                : (field.value || []).filter((s) => s !== size);
+                              field.onChange(updatedSizes);
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="text-sm font-normal">{size}</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="colors"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Available Colors</FormLabel>
+              <div className="flex flex-wrap gap-2">
+                {availableColors.map((color) => (
+                  <FormField
+                    key={color}
+                    control={form.control}
+                    name="colors"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center space-x-1">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value?.includes(color)}
+                            onCheckedChange={(checked) => {
+                              const updatedColors = checked
+                                ? [...(field.value || []), color]
+                                : (field.value || []).filter((c) => c !== color);
+                              field.onChange(updatedColors);
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="text-sm font-normal">{color}</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
               <FormMessage />
             </FormItem>
           )}
