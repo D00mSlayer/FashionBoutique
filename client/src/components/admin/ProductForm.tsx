@@ -51,6 +51,7 @@ export function ProductForm() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: InsertProduct) => {
+      console.log("Submitting form data:", data);
       const formData = new FormData();
 
       // Add text fields
@@ -71,7 +72,9 @@ export function ProductForm() {
       }
 
       const res = await apiRequest("POST", "/api/products", formData);
-      return res.json();
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.details || json.message);
+      return json;
     },
     onSuccess: () => {
       toast({
@@ -89,9 +92,9 @@ export function ProductForm() {
     }
   });
 
-  function onSubmit(data: InsertProduct) {
-    console.log("Submitting form data:", data);
-    mutate(data);
+  function onSubmit(values: InsertProduct) {
+    console.log("Form values:", values);
+    mutate(values);
   }
 
   return (
@@ -104,7 +107,7 @@ export function ProductForm() {
             <FormItem>
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input placeholder="Enter product name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -118,7 +121,7 @@ export function ProductForm() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea {...field} />
+                <Textarea placeholder="Enter product description" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -163,7 +166,7 @@ export function ProductForm() {
                     control={form.control}
                     name="sizes"
                     render={({ field }) => (
-                      <FormItem className="flex items-center space-x-1">
+                      <FormItem key={size} className="flex items-center space-x-1">
                         <FormControl>
                           <Checkbox
                             checked={field.value?.includes(size)}
@@ -199,7 +202,7 @@ export function ProductForm() {
                     control={form.control}
                     name="colors"
                     render={({ field }) => (
-                      <FormItem className="flex items-center space-x-1">
+                      <FormItem key={color} className="flex items-center space-x-1">
                         <FormControl>
                           <Checkbox
                             checked={field.value?.includes(color)}
