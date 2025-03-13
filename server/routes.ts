@@ -31,19 +31,25 @@ export async function registerRoutes(app: Express) {
 
   app.post("/api/products", upload.array("images", 5), async (req, res) => {
     try {
+      console.log("Received product data:", req.body);
+      console.log("Received files:", req.files);
+
       const files = req.files as Express.Multer.File[] | undefined;
 
-      const productData = insertProductSchema.parse({
-        ...req.body,
+      const productData = {
+        name: req.body.name,
+        description: req.body.description,
+        category: req.body.category,
+        sizes: Array.isArray(req.body.sizes) ? req.body.sizes : JSON.parse(req.body.sizes || "[]"),
+        colors: Array.isArray(req.body.colors) ? req.body.colors : JSON.parse(req.body.colors || "[]"),
         images: files ? files.map(
           file => `data:${file.mimetype};base64,${file.buffer.toString("base64")}`
         ) : [],
-        sizes: JSON.parse(req.body.sizes || "[]"),
-        colors: JSON.parse(req.body.colors || "[]"),
         isNewCollection: req.body.isNewCollection === "true"
-      });
+      };
 
-      const product = await storage.createProduct(productData);
+      const validatedData = insertProductSchema.parse(productData);
+      const product = await storage.createProduct(validatedData);
       res.json(product);
     } catch (error) {
       console.error("Error creating product:", error);

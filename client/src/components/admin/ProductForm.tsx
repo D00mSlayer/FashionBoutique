@@ -90,6 +90,7 @@ export function ProductForm() {
   });
 
   function onSubmit(data: InsertProduct) {
+    console.log("Submitting form data:", data);
     mutate(data);
   }
 
