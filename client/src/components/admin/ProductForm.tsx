@@ -12,8 +12,27 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-const availableSizes = ["XS", "S", "M", "L", "XL", "XXL"] as const;
-const availableColors = ["Black", "White", "Red", "Blue", "Green", "Pink", "Purple", "Yellow"] as const;
+const availableSizes = [
+  "Free Size",
+  "XS", "S", "M", "L", "XL", "XXL",
+  "26", "28", "30", "32", "34", "36", "38", "40"
+] as const;
+
+const availableColors = [
+  // Basic Colors
+  "Black", "White", "Grey", "Navy Blue",
+  // Warm Colors
+  "Red", "Maroon", "Pink", "Light Pink", "Peach",
+  "Orange", "Rust", "Brown", "Beige", "Cream",
+  // Cool Colors
+  "Blue", "Light Blue", "Sky Blue", "Turquoise",
+  "Green", "Olive", "Mint", "Sage",
+  // Rich Colors
+  "Purple", "Lavender", "Wine",
+  "Yellow", "Mustard", "Gold",
+  // Prints and Patterns
+  "Floral", "Striped", "Checked", "Polka Dots"
+] as const;
 
 export function ProductForm() {
   const { toast } = useToast();
