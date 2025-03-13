@@ -48,6 +48,8 @@ export async function registerRoutes(app: Express) {
         isNewCollection: req.body.isNewCollection === "true"
       };
 
+      console.log("Parsed product data:", productData);
+
       const validatedData = insertProductSchema.parse(productData);
       const product = await storage.createProduct(validatedData);
       res.json(product);

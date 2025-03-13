@@ -50,31 +50,36 @@ export function ProductForm() {
   });
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async (data: InsertProduct) => {
-      console.log("Submitting form data:", data);
+    mutationFn: async (values: InsertProduct) => {
+      console.log("Form values being submitted:", values);
+
       const formData = new FormData();
 
-      // Add text fields
-      formData.append("name", data.name);
-      formData.append("description", data.description);
-      formData.append("category", data.category);
-      formData.append("isNewCollection", String(data.isNewCollection));
+      // Add basic fields
+      formData.append("name", values.name);
+      formData.append("description", values.description);
+      formData.append("category", values.category);
+      formData.append("isNewCollection", String(values.isNewCollection));
 
-      // Add arrays as JSON strings
-      formData.append("sizes", JSON.stringify(data.sizes));
-      formData.append("colors", JSON.stringify(data.colors));
+      // Add arrays
+      formData.append("sizes", JSON.stringify(values.sizes));
+      formData.append("colors", JSON.stringify(values.colors));
 
-      // Add images
-      if (Array.isArray(data.images)) {
-        data.images.forEach((file) => {
-          formData.append("images", file);
+      // Add files
+      if (Array.isArray(values.images)) {
+        values.images.forEach((file) => {
+          if (file instanceof File) {
+            formData.append("images", file);
+          }
         });
       }
 
       const res = await apiRequest("POST", "/api/products", formData);
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.details || json.message);
-      return json;
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.details || error.message);
+      }
+      return res.json();
     },
     onSuccess: () => {
       toast({
@@ -84,6 +89,7 @@ export function ProductForm() {
       form.reset();
     },
     onError: (error: Error) => {
+      console.error("Form submission error:", error);
       toast({
         title: "Error",
         description: error.message,
@@ -92,9 +98,13 @@ export function ProductForm() {
     }
   });
 
-  function onSubmit(values: InsertProduct) {
-    console.log("Form values:", values);
-    mutate(values);
+  async function onSubmit(values: InsertProduct) {
+    try {
+      console.log("Form values:", values);
+      await mutate(values);
+    } catch (error) {
+      console.error("Submit error:", error);
+    }
   }
 
   return (
@@ -156,7 +166,7 @@ export function ProductForm() {
         <FormField
           control={form.control}
           name="sizes"
-          render={({ field }) => (
+          render={() => (
             <FormItem>
               <FormLabel>Available Sizes</FormLabel>
               <div className="flex flex-wrap gap-2">
@@ -192,7 +202,7 @@ export function ProductForm() {
         <FormField
           control={form.control}
           name="colors"
-          render={({ field }) => (
+          render={() => (
             <FormItem>
               <FormLabel>Available Colors</FormLabel>
               <div className="flex flex-wrap gap-2">
