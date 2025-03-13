@@ -29,17 +29,24 @@ export async function registerRoutes(app: Express) {
   });
 
   app.post("/api/products", upload.array("images", 5), async (req, res) => {
-    const productData = insertProductSchema.parse({
-      ...req.body,
-      images: (req.files as Express.Multer.File[]).map(
-        file => `data:${file.mimetype};base64,${file.buffer.toString("base64")}`
-      ),
-      sizes: JSON.parse(req.body.sizes),
-      colors: JSON.parse(req.body.colors),
-    });
+    try {
+      const files = req.files as Express.Multer.File[] | undefined;
 
-    const product = await storage.createProduct(productData);
-    res.json(product);
+      const productData = insertProductSchema.parse({
+        ...req.body,
+        images: files ? files.map(
+          file => `data:${file.mimetype};base64,${file.buffer.toString("base64")}`
+        ) : [],
+        sizes: JSON.parse(req.body.sizes || "[]"),
+        colors: JSON.parse(req.body.colors || "[]"),
+      });
+
+      const product = await storage.createProduct(productData);
+      res.json(product);
+    } catch (error) {
+      console.error("Error creating product:", error);
+      res.status(400).json({ message: "Invalid product data" });
+    }
   });
 
   app.delete("/api/products/:id", async (req, res) => {

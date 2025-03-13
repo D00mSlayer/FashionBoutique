@@ -14,13 +14,13 @@ const Logo = () => (
 const NavLinks = ({ className = "" }) => (
   <nav className={className}>
     <Link href="/">
-      <a className="hover:text-primary">Home</a>
+      <span className="hover:text-primary cursor-pointer">Home</span>
     </Link>
     <Link href="/new-collection">
-      <a className="hover:text-primary">New Collection</a>
+      <span className="hover:text-primary cursor-pointer">New Collection</span>
     </Link>
     <Link href="/contact">
-      <a className="hover:text-primary">Contact</a>
+      <span className="hover:text-primary cursor-pointer">Contact</span>
     </Link>
   </nav>
 );
@@ -30,9 +30,9 @@ export function Header() {
     <header className="border-b">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/">
-          <a className="flex items-center">
+          <span className="flex items-center cursor-pointer">
             <Logo />
-          </a>
+          </span>
         </Link>
 
         {/* Desktop Navigation */}
