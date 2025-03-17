@@ -1,6 +1,6 @@
 import { products, type Product, type InsertProduct } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   getAllProducts(): Promise<Product[]>;
@@ -13,19 +13,19 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getAllProducts(): Promise<Product[]> {
     return await db.select().from(products)
-      .orderBy(products.createdAt);
+      .orderBy(desc(products.createdAt));
   }
 
   async getNewCollection(): Promise<Product[]> {
     return await db.select().from(products)
       .where(eq(products.isNewCollection, true))
-      .orderBy(products.createdAt);
+      .orderBy(desc(products.createdAt));
   }
 
   async getProductsByCategory(category: string): Promise<Product[]> {
     return await db.select().from(products)
       .where(eq(products.category, category))
-      .orderBy(products.createdAt);
+      .orderBy(desc(products.createdAt));
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
