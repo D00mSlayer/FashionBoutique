@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 const availableSizes = [
@@ -41,7 +40,7 @@ export function ProductForm() {
     defaultValues: {
       name: "",
       description: "",
-      category: "Tops",
+      category: categories[0],
       sizes: [],
       colors: [],
       images: [],
@@ -51,8 +50,6 @@ export function ProductForm() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: InsertProduct) => {
-      console.log("Form values being submitted:", values);
-
       const formData = new FormData();
 
       // Add basic fields
@@ -61,11 +58,11 @@ export function ProductForm() {
       formData.append("category", values.category);
       formData.append("isNewCollection", String(values.isNewCollection));
 
-      // Add arrays
+      // Add arrays as JSON strings
       formData.append("sizes", JSON.stringify(values.sizes));
       formData.append("colors", JSON.stringify(values.colors));
 
-      // Add files
+      // Add images if they exist and are files
       if (Array.isArray(values.images)) {
         values.images.forEach((file) => {
           if (file instanceof File) {
@@ -74,11 +71,18 @@ export function ProductForm() {
         });
       }
 
-      const res = await apiRequest("POST", "/api/products", formData);
+      // Remove Content-Type header, let the browser set it with boundary
+      const res = await fetch("/api/products", {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      });
+
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.details || error.message);
       }
+
       return res.json();
     },
     onSuccess: () => {
@@ -99,12 +103,8 @@ export function ProductForm() {
   });
 
   async function onSubmit(values: InsertProduct) {
-    try {
-      console.log("Form values:", values);
-      await mutate(values);
-    } catch (error) {
-      console.error("Submit error:", error);
-    }
+    console.log("Submitting form values:", values);
+    await mutate(values);
   }
 
   return (
