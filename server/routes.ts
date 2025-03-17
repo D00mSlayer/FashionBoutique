@@ -18,7 +18,10 @@ const upload = multer({
 export async function registerRoutes(app: Express) {
   app.get("/api/products", async (req, res) => {
     const products = await storage.getAllProducts();
-    console.log("Fetching all products:", products);
+    console.log("Fetching all products:", products.map(p => ({
+      ...p,
+      images: p.images.map(img => img.substring(0, 50) + '...')
+    })));
     res.json(products);
   });
 
@@ -29,7 +32,10 @@ export async function registerRoutes(app: Express) {
 
   app.get("/api/products/category/:category", async (req, res) => {
     const products = await storage.getProductsByCategory(req.params.category);
-    console.log("Fetching products by category:", req.params.category, products);
+    console.log("Fetching products by category:", req.params.category, products.map(p => ({
+      ...p,
+      images: p.images.map(img => img.substring(0, 50) + '...')
+    })));
     res.json(products);
   });
 
@@ -53,7 +59,7 @@ export async function registerRoutes(app: Express) {
               const compressedBuffer = await compressImage(file.buffer);
               const base64Url = `data:${file.mimetype};base64,${compressedBuffer.toString("base64")}`;
               mediaUrls.push(base64Url);
-              console.log("Processed image file, length:", base64Url.length);
+              console.log("Processed image file, size:", Math.round(base64Url.length / 1024), "KB");
             }
           } catch (error) {
             console.error("Error processing media file:", error);
@@ -71,13 +77,19 @@ export async function registerRoutes(app: Express) {
         isNewCollection: req.body.isNewCollection === "true"
       };
 
-      console.log("Parsed product data:", {
+      console.log("Creating product with data:", {
         ...productData,
         images: productData.images.map(url => url.substring(0, 50) + '...')
       });
 
       const validatedData = insertProductSchema.parse(productData);
       const product = await storage.createProduct(validatedData);
+
+      console.log("Created product:", {
+        ...product,
+        images: product.images.map(img => img.substring(0, 50) + '...')
+      });
+
       res.json(product);
     } catch (error) {
       console.error("Error creating product:", error);
