@@ -22,11 +22,25 @@ export async function registerRoutes(app: Express) {
       ...p,
       images: p.images.map(img => img.substring(0, 50) + '...')
     })));
+
+    // Add cache headers
+    res.set({
+      'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
+      'Vary': 'Accept-Encoding'
+    });
+
     res.json(products);
   });
 
   app.get("/api/products/new-collection", async (req, res) => {
     const products = await storage.getNewCollection();
+
+    // Add cache headers
+    res.set({
+      'Cache-Control': 'public, max-age=300',
+      'Vary': 'Accept-Encoding'
+    });
+
     res.json(products);
   });
 
@@ -36,6 +50,13 @@ export async function registerRoutes(app: Express) {
       ...p,
       images: p.images.map(img => img.substring(0, 50) + '...')
     })));
+
+    // Add cache headers
+    res.set({
+      'Cache-Control': 'public, max-age=300',
+      'Vary': 'Accept-Encoding'
+    });
+
     res.json(products);
   });
 
@@ -97,9 +118,9 @@ export async function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Error creating product:", error);
       if (error instanceof Error) {
-        res.status(400).json({ 
-          message: "Invalid product data", 
-          details: error.message 
+        res.status(400).json({
+          message: "Invalid product data",
+          details: error.message
         });
       } else {
         res.status(400).json({ message: "Invalid product data" });

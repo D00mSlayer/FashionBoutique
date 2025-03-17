@@ -3,7 +3,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { openWhatsApp } from "@/lib/whatsapp";
 import type { Product } from "@shared/schema";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ProductCardProps {
   product: Product;
@@ -11,7 +11,23 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [cachedImage, setCachedImage] = useState<string | null>(null);
   const isVideo = (url: string) => url.startsWith('data:video');
+
+  useEffect(() => {
+    // Try to load image from cache first
+    if (product.images[0] && !isVideo(product.images[0])) {
+      caches.match(product.images[0]).then(response => {
+        if (response) {
+          response.blob().then(blob => {
+            setCachedImage(URL.createObjectURL(blob));
+          });
+        } else {
+          setCachedImage(product.images[0]);
+        }
+      });
+    }
+  }, [product.images[0]]);
 
   const handleImageError = () => {
     console.error("Failed to load image for product:", product.name);
@@ -34,10 +50,11 @@ export function ProductCard({ product }: ProductCardProps) {
               />
             ) : (
               <img
-                src={product.images[0]}
+                src={cachedImage || product.images[0]}
                 alt={product.name}
                 className="object-cover w-full h-full"
                 onError={() => handleImageError()}
+                loading="lazy"
               />
             )
           ) : (
