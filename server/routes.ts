@@ -18,6 +18,7 @@ const upload = multer({
 export async function registerRoutes(app: Express) {
   app.get("/api/products", async (req, res) => {
     const products = await storage.getAllProducts();
+    console.log("Fetching all products:", products);
     res.json(products);
   });
 
@@ -28,13 +29,14 @@ export async function registerRoutes(app: Express) {
 
   app.get("/api/products/category/:category", async (req, res) => {
     const products = await storage.getProductsByCategory(req.params.category);
+    console.log("Fetching products by category:", req.params.category, products);
     res.json(products);
   });
 
   app.post("/api/products", upload.array("media", 10), async (req, res) => {
     try {
       console.log("Received product data:", req.body);
-      console.log("Received files:", req.files);
+      console.log("Received files:", req.files?.length);
 
       const files = req.files as Express.Multer.File[] | undefined;
       const mediaUrls: string[] = [];
@@ -46,9 +48,12 @@ export async function registerRoutes(app: Express) {
             if (isVideo(file.mimetype)) {
               const videoUrl = await compressVideo(file.buffer);
               mediaUrls.push(videoUrl);
+              console.log("Processed video file");
             } else if (isImage(file.mimetype)) {
               const compressedBuffer = await compressImage(file.buffer);
-              mediaUrls.push(`data:${file.mimetype};base64,${compressedBuffer.toString("base64")}`);
+              const base64Url = `data:${file.mimetype};base64,${compressedBuffer.toString("base64")}`;
+              mediaUrls.push(base64Url);
+              console.log("Processed image file, length:", base64Url.length);
             }
           } catch (error) {
             console.error("Error processing media file:", error);
@@ -66,7 +71,10 @@ export async function registerRoutes(app: Express) {
         isNewCollection: req.body.isNewCollection === "true"
       };
 
-      console.log("Parsed product data:", productData);
+      console.log("Parsed product data:", {
+        ...productData,
+        images: productData.images.map(url => url.substring(0, 50) + '...')
+      });
 
       const validatedData = insertProductSchema.parse(productData);
       const product = await storage.createProduct(validatedData);
