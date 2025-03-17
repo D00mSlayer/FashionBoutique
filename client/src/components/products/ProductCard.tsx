@@ -9,15 +9,29 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const isVideo = (url: string) => url.startsWith('data:video');
+
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
         <div className="relative aspect-square">
-          <img
-            src={product.images[0]}
-            alt={product.name}
-            className="object-cover w-full h-full"
-          />
+          {product.images[0] && (
+            isVideo(product.images[0]) ? (
+              <video
+                src={product.images[0]}
+                className="object-cover w-full h-full"
+                controls
+                muted
+                playsInline
+              />
+            ) : (
+              <img
+                src={product.images[0]}
+                alt={product.name}
+                className="object-cover w-full h-full"
+              />
+            )
+          )}
           {product.isNewCollection && (
             <Badge className="absolute top-2 right-2">
               New Collection

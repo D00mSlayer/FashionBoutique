@@ -9,7 +9,7 @@ export default function Home() {
 
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: selectedCategory 
-      ? ["/api/products/category", selectedCategory]
+      ? [`/api/products/category/${selectedCategory}`]
       : ["/api/products"],
   });
 
