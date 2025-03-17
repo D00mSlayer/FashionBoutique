@@ -60,6 +60,8 @@ export async function registerRoutes(app: Express) {
               const base64Url = `data:${file.mimetype};base64,${compressedBuffer.toString("base64")}`;
               mediaUrls.push(base64Url);
               console.log("Processed image file, size:", Math.round(base64Url.length / 1024), "KB");
+            } else {
+              console.log("Unsupported file type:", file.mimetype);
             }
           } catch (error) {
             console.error("Error processing media file:", error);
@@ -67,19 +69,20 @@ export async function registerRoutes(app: Express) {
         }
       }
 
+      // Parse form data
       const productData = {
         name: req.body.name,
         description: req.body.description,
         category: req.body.category,
-        sizes: Array.isArray(req.body.sizes) ? req.body.sizes : JSON.parse(req.body.sizes || "[]"),
-        colors: Array.isArray(req.body.colors) ? req.body.colors : JSON.parse(req.body.colors || "[]"),
+        sizes: JSON.parse(req.body.sizes || "[]"),
+        colors: JSON.parse(req.body.colors || "[]"),
         images: mediaUrls,
         isNewCollection: req.body.isNewCollection === "true"
       };
 
       console.log("Creating product with data:", {
         ...productData,
-        images: productData.images.map(url => url.substring(0, 50) + '...')
+        images: mediaUrls.length > 0 ? mediaUrls.map(url => url.substring(0, 50) + '...') : []
       });
 
       const validatedData = insertProductSchema.parse(productData);

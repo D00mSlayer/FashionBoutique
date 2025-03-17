@@ -54,6 +54,7 @@ export function ProductForm() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: InsertProduct) => {
+      console.log("Starting form submission with values:", values);
       const formData = new FormData();
 
       // Add basic fields
@@ -68,11 +69,18 @@ export function ProductForm() {
 
       // Add media files
       if (Array.isArray(values.images)) {
+        console.log("Processing images:", values.images.length, "files");
         values.images.forEach((file) => {
           if (file instanceof File) {
+            console.log("Appending file:", file.name, file.type);
             formData.append("media", file);
           }
         });
+      }
+
+      // Log the FormData entries for debugging
+      for (const pair of formData.entries()) {
+        console.log('FormData entry:', pair[0], pair[1] instanceof File ? 'File: ' + pair[1].name : pair[1]);
       }
 
       const res = await fetch("/api/products", {
