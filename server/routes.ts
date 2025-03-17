@@ -134,8 +134,18 @@ app.post("/api/products", upload.array("media", 10), async (req, res) => {
 });
 
   app.delete("/api/products/:id", async (req, res) => {
-    await storage.deleteProduct(parseInt(req.params.id));
-    res.status(204).end();
+    try {
+      const productId = parseInt(req.params.id);
+      console.log("Deleting product with ID:", productId);
+
+      await storage.deleteProduct(productId);
+      console.log("Successfully deleted product:", productId);
+
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      res.status(500).json({ message: "Failed to delete product" });
+    }
   });
 
   const httpServer = createServer(app);
