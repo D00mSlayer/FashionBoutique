@@ -64,6 +64,11 @@ app.post("/api/products", upload.array("media", 10), async (req, res) => {
   try {
     console.log("Received product data:", req.body);
     console.log("Received files:", req.files?.length, "files");
+    console.log("Files details:", (req.files as Express.Multer.File[])?.map(f => ({
+      name: f.originalname,
+      type: f.mimetype,
+      size: f.size
+    })));
 
     const files = req.files as Express.Multer.File[] | undefined;
     const mediaUrls: string[] = [];
@@ -75,12 +80,12 @@ app.post("/api/products", upload.array("media", 10), async (req, res) => {
           if (isVideo(file.mimetype)) {
             const videoUrl = await compressVideo(file.buffer);
             mediaUrls.push(videoUrl);
-            console.log("Processed video file");
+            console.log("Processed video, size:", Math.round(videoUrl.length / 1024), "KB");
           } else if (isImage(file.mimetype)) {
             const compressedBuffer = await compressImage(file.buffer);
             const base64Url = `data:${file.mimetype};base64,${compressedBuffer.toString("base64")}`;
             mediaUrls.push(base64Url);
-            console.log("Processed image file, size:", Math.round(base64Url.length / 1024), "KB");
+            console.log("Processed image, size:", Math.round(base64Url.length / 1024), "KB");
           } else {
             console.log("Unsupported file type:", file.mimetype);
           }
@@ -103,13 +108,13 @@ app.post("/api/products", upload.array("media", 10), async (req, res) => {
 
     console.log("Creating product with data:", {
       ...productData,
-      images: mediaUrls.length > 0 ? mediaUrls.map(url => url.substring(0, 50) + '...') : []
+      images: mediaUrls.map(url => url.substring(0, 50) + '...')
     });
 
     const validatedData = insertProductSchema.parse(productData);
     const product = await storage.createProduct(validatedData);
 
-    console.log("Created product:", {
+    console.log("Product saved to database:", {
       ...product,
       images: product.images.map(img => img.substring(0, 50) + '...')
     });

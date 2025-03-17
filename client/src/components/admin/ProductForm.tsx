@@ -119,6 +119,7 @@ export function ProductForm() {
     if (!files?.length) return;
 
     const fileArray = Array.from(files);
+    console.log("Selected files:", fileArray.map(f => ({ name: f.name, type: f.type })));
     form.setValue("images", fileArray);
 
     // Generate previews
@@ -139,7 +140,32 @@ export function ProductForm() {
   };
 
   async function onSubmit(values: InsertProduct) {
-    console.log("Submitting form values:", values);
+    console.log("Form values before submission:", values);
+    console.log("Images to upload:", values.images.length);
+
+    const formData = new FormData();
+    formData.append("name", values.name);
+    formData.append("description", values.description);
+    formData.append("category", values.category);
+    formData.append("sizes", JSON.stringify(values.sizes));
+    formData.append("colors", JSON.stringify(values.colors));
+    formData.append("isNewCollection", String(values.isNewCollection));
+
+    // Add each image file to FormData
+    if (Array.isArray(values.images)) {
+      values.images.forEach((file, index) => {
+        if (file instanceof File) {
+          console.log(`Appending file ${index}:`, file.name, file.type);
+          formData.append("media", file);
+        }
+      });
+    }
+
+    // Log all FormData entries
+    for (const [key, value] of formData.entries()) {
+      console.log(`FormData entry - ${key}:`, value instanceof File ? `File: ${value.name}` : value);
+    }
+
     await mutate(values);
   }
 
