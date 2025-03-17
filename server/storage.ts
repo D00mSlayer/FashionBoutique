@@ -1,4 +1,6 @@
 import { products, type Product, type InsertProduct } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getAllProducts(): Promise<Product[]>;
@@ -8,49 +10,35 @@ export interface IStorage {
   deleteProduct(id: number): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private products: Map<number, Product>;
-  private currentId: number;
-
-  constructor() {
-    this.products = new Map();
-    this.currentId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getAllProducts(): Promise<Product[]> {
-    return Array.from(this.products.values())
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return await db.select().from(products)
+      .orderBy(products.createdAt);
   }
 
   async getNewCollection(): Promise<Product[]> {
-    return Array.from(this.products.values())
-      .filter(product => product.isNewCollection)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return await db.select().from(products)
+      .where(eq(products.isNewCollection, true))
+      .orderBy(products.createdAt);
   }
 
   async getProductsByCategory(category: string): Promise<Product[]> {
-    return Array.from(this.products.values())
-      .filter(product => product.category === category)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return await db.select().from(products)
+      .where(eq(products.category, category))
+      .orderBy(products.createdAt);
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    const id = this.currentId++;
-    const product: Product = {
-      ...insertProduct,
-      id,
-      createdAt: new Date(),
-      isNewCollection: insertProduct.isNewCollection ?? false, // Ensure it's always a boolean
-    };
-    this.products.set(id, product);
+    const [product] = await db
+      .insert(products)
+      .values(insertProduct)
+      .returning();
     return product;
   }
 
   async deleteProduct(id: number): Promise<void> {
-    if (!this.products.delete(id)) {
-      throw new Error(`Product with id ${id} not found`);
-    }
+    await db.delete(products).where(eq(products.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
