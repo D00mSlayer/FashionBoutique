@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from 'react';
+import { X } from "lucide-react";
 
 const availableSizes = [
   "Free Size",
@@ -35,6 +37,8 @@ const availableColors = [
 
 export function ProductForm() {
   const { toast } = useToast();
+  const [previews, setPreviews] = useState<string[]>([]);
+
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
     defaultValues: {
@@ -62,16 +66,15 @@ export function ProductForm() {
       formData.append("sizes", JSON.stringify(values.sizes));
       formData.append("colors", JSON.stringify(values.colors));
 
-      // Add images if they exist and are files
+      // Add media files
       if (Array.isArray(values.images)) {
         values.images.forEach((file) => {
           if (file instanceof File) {
-            formData.append("images", file);
+            formData.append("media", file);
           }
         });
       }
 
-      // Remove Content-Type header, let the browser set it with boundary
       const res = await fetch("/api/products", {
         method: "POST",
         body: formData,
@@ -90,6 +93,7 @@ export function ProductForm() {
         title: "Success",
         description: "Product added successfully"
       });
+      setPreviews([]);
       form.reset();
     },
     onError: (error: Error) => {
@@ -101,6 +105,30 @@ export function ProductForm() {
       });
     }
   });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+
+    const fileArray = Array.from(files);
+    form.setValue("images", fileArray);
+
+    // Generate previews
+    fileArray.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeFile = (index: number) => {
+    const currentFiles = form.getValues("images");
+    const newFiles = currentFiles.filter((_, i) => i !== index);
+    form.setValue("images", newFiles);
+    setPreviews(prev => prev.filter((_, i) => i !== index));
+  };
 
   async function onSubmit(values: InsertProduct) {
     console.log("Submitting form values:", values);
@@ -240,20 +268,45 @@ export function ProductForm() {
           name="images"
           render={({ field: { onChange, value, ...field } }) => (
             <FormItem>
-              <FormLabel>Images</FormLabel>
+              <FormLabel>Images & Videos</FormLabel>
               <FormControl>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => {
-                    const files = e.target.files;
-                    if (files?.length) {
-                      onChange(Array.from(files));
-                    }
-                  }}
-                  {...field}
-                />
+                <div className="space-y-4">
+                  <Input
+                    type="file"
+                    accept="image/*,video/*"
+                    multiple
+                    onChange={handleFileChange}
+                    {...field}
+                  />
+                  {previews.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {previews.map((preview, index) => (
+                        <div key={index} className="relative aspect-square">
+                          {preview.startsWith('data:video') ? (
+                            <video
+                              src={preview}
+                              className="w-full h-full object-cover rounded-lg"
+                              controls
+                            />
+                          ) : (
+                            <img
+                              src={preview}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -4,13 +4,15 @@ import { storage } from "./storage";
 import multer from "multer";
 import { insertProductSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
+import { compressImage, compressVideo, isVideo, isImage } from "./utils/mediaProcessor";
 
 // Configure multer for in-memory file storage
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+    files: 10 // Maximum 10 files
+  }
 });
 
 export async function registerRoutes(app: Express) {
@@ -29,12 +31,30 @@ export async function registerRoutes(app: Express) {
     res.json(products);
   });
 
-  app.post("/api/products", upload.array("images", 5), async (req, res) => {
+  app.post("/api/products", upload.array("media", 10), async (req, res) => {
     try {
       console.log("Received product data:", req.body);
       console.log("Received files:", req.files);
 
       const files = req.files as Express.Multer.File[] | undefined;
+      const mediaUrls: string[] = [];
+
+      // Process and compress media files
+      if (files && files.length > 0) {
+        for (const file of files) {
+          try {
+            if (isVideo(file.mimetype)) {
+              const videoUrl = await compressVideo(file.buffer);
+              mediaUrls.push(videoUrl);
+            } else if (isImage(file.mimetype)) {
+              const compressedBuffer = await compressImage(file.buffer);
+              mediaUrls.push(`data:${file.mimetype};base64,${compressedBuffer.toString("base64")}`);
+            }
+          } catch (error) {
+            console.error("Error processing media file:", error);
+          }
+        }
+      }
 
       const productData = {
         name: req.body.name,
@@ -42,9 +62,7 @@ export async function registerRoutes(app: Express) {
         category: req.body.category,
         sizes: Array.isArray(req.body.sizes) ? req.body.sizes : JSON.parse(req.body.sizes || "[]"),
         colors: Array.isArray(req.body.colors) ? req.body.colors : JSON.parse(req.body.colors || "[]"),
-        images: files ? files.map(
-          file => `data:${file.mimetype};base64,${file.buffer.toString("base64")}`
-        ) : [],
+        images: mediaUrls,
         isNewCollection: req.body.isNewCollection === "true"
       };
 
