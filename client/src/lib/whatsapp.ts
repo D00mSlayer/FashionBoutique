@@ -13,6 +13,6 @@ export function createWhatsAppMessage(product: Product): string {
 
 export function openWhatsApp(product: Product) {
   const message = createWhatsAppMessage(product);
-  const phoneNumber = "+919876543210"; // Replace with actual number
+  const phoneNumber = "+916363840247"; // Replace with actual number
   window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
 }

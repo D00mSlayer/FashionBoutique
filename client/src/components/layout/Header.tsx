@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 const Logo = () => (
   <svg width="120" height="40" viewBox="0 0 120 40">
     <text x="10" y="30" fill="currentColor" fontSize="24" fontWeight="bold">
-      BOUTIQUE
+      Viba Chic
     </text>
   </svg>
 );

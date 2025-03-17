@@ -60,73 +60,73 @@ export async function registerRoutes(app: Express) {
     res.json(products);
   });
 
-  app.post("/api/products", upload.array("media", 10), async (req, res) => {
-    try {
-      console.log("Received product data:", req.body);
-      console.log("Received files:", req.files?.length);
+app.post("/api/products", upload.array("media", 10), async (req, res) => {
+  try {
+    console.log("Received product data:", req.body);
+    console.log("Received files:", req.files?.length, "files");
 
-      const files = req.files as Express.Multer.File[] | undefined;
-      const mediaUrls: string[] = [];
+    const files = req.files as Express.Multer.File[] | undefined;
+    const mediaUrls: string[] = [];
 
-      // Process and compress media files
-      if (files && files.length > 0) {
-        for (const file of files) {
-          try {
-            if (isVideo(file.mimetype)) {
-              const videoUrl = await compressVideo(file.buffer);
-              mediaUrls.push(videoUrl);
-              console.log("Processed video file");
-            } else if (isImage(file.mimetype)) {
-              const compressedBuffer = await compressImage(file.buffer);
-              const base64Url = `data:${file.mimetype};base64,${compressedBuffer.toString("base64")}`;
-              mediaUrls.push(base64Url);
-              console.log("Processed image file, size:", Math.round(base64Url.length / 1024), "KB");
-            } else {
-              console.log("Unsupported file type:", file.mimetype);
-            }
-          } catch (error) {
-            console.error("Error processing media file:", error);
+    // Process and compress media files
+    if (files && files.length > 0) {
+      for (const file of files) {
+        try {
+          if (isVideo(file.mimetype)) {
+            const videoUrl = await compressVideo(file.buffer);
+            mediaUrls.push(videoUrl);
+            console.log("Processed video file");
+          } else if (isImage(file.mimetype)) {
+            const compressedBuffer = await compressImage(file.buffer);
+            const base64Url = `data:${file.mimetype};base64,${compressedBuffer.toString("base64")}`;
+            mediaUrls.push(base64Url);
+            console.log("Processed image file, size:", Math.round(base64Url.length / 1024), "KB");
+          } else {
+            console.log("Unsupported file type:", file.mimetype);
           }
+        } catch (error) {
+          console.error("Error processing media file:", error);
         }
       }
-
-      // Parse form data
-      const productData = {
-        name: req.body.name,
-        description: req.body.description,
-        category: req.body.category,
-        sizes: JSON.parse(req.body.sizes || "[]"),
-        colors: JSON.parse(req.body.colors || "[]"),
-        images: mediaUrls,
-        isNewCollection: req.body.isNewCollection === "true"
-      };
-
-      console.log("Creating product with data:", {
-        ...productData,
-        images: mediaUrls.length > 0 ? mediaUrls.map(url => url.substring(0, 50) + '...') : []
-      });
-
-      const validatedData = insertProductSchema.parse(productData);
-      const product = await storage.createProduct(validatedData);
-
-      console.log("Created product:", {
-        ...product,
-        images: product.images.map(img => img.substring(0, 50) + '...')
-      });
-
-      res.json(product);
-    } catch (error) {
-      console.error("Error creating product:", error);
-      if (error instanceof Error) {
-        res.status(400).json({
-          message: "Invalid product data",
-          details: error.message
-        });
-      } else {
-        res.status(400).json({ message: "Invalid product data" });
-      }
     }
-  });
+
+    // Parse form data
+    const productData = {
+      name: req.body.name,
+      description: req.body.description,
+      category: req.body.category,
+      sizes: JSON.parse(req.body.sizes || "[]"),
+      colors: JSON.parse(req.body.colors || "[]"),
+      images: mediaUrls,
+      isNewCollection: req.body.isNewCollection === "true"
+    };
+
+    console.log("Creating product with data:", {
+      ...productData,
+      images: mediaUrls.length > 0 ? mediaUrls.map(url => url.substring(0, 50) + '...') : []
+    });
+
+    const validatedData = insertProductSchema.parse(productData);
+    const product = await storage.createProduct(validatedData);
+
+    console.log("Created product:", {
+      ...product,
+      images: product.images.map(img => img.substring(0, 50) + '...')
+    });
+
+    res.json(product);
+  } catch (error) {
+    console.error("Error creating product:", error);
+    if (error instanceof Error) {
+      res.status(400).json({
+        message: "Invalid product data",
+        details: error.message
+      });
+    } else {
+      res.status(400).json({ message: "Invalid product data" });
+    }
+  }
+});
 
   app.delete("/api/products/:id", async (req, res) => {
     await storage.deleteProduct(parseInt(req.params.id));

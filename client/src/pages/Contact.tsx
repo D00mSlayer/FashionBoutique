@@ -12,22 +12,21 @@ export default function Contact() {
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <MapPin className="h-5 w-5 text-primary" />
-              <p>123 Koramangala, Bangalore - 560034</p>
+              <p>123, 2nd Avenue , 5th Main Road, Teacher's Colony, Koramangala 1st Block, Bangalore - 560034</p>
             </div>
             <div className="flex items-center gap-3">
               <Phone className="h-5 w-5 text-primary" />
-              <p>+91 98765 43210</p>
+              <p>+91 63638 40247</p>
             </div>
             <div className="flex items-center gap-3">
               <Mail className="h-5 w-5 text-primary" />
-              <p>info@boutique.com</p>
+              <p>info@vibachic.in</p>
             </div>
             <div className="flex items-center gap-3">
               <Clock className="h-5 w-5 text-primary" />
               <div>
-                <p>Monday - Saturday: 10:00 AM - 8:00 PM</p>
-                <p>Sunday: 11:00 AM - 6:00 PM</p>
-              </div>
+                <p>All Days: 10:00 AM - 10:00 PM</p>
+                </div>
             </div>
           </div>
         </Card>

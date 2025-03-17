@@ -10,15 +10,15 @@ export function Footer() {
           <div className="space-y-2">
             <p className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              123 Koramangala, Bangalore - 560034
+              123, 2nd Avenue, 5th Main Road, Teacher's Colony, Koramangala 1st Block, Bangalore - 560034
             </p>
             <p className="flex items-center gap-2">
               <Phone className="h-4 w-4" />
-              +91 98765 43210
+              +91 63638 40247
             </p>
             <p className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              info@boutique.com
+              info@vibachic.in
             </p>
           </div>
         </div>
@@ -34,7 +34,7 @@ export function Footer() {
                className="hover:text-primary">
               <SiFacebook className="h-6 w-6" />
             </a>
-            <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer"
+            <a href="https://wa.me/916363840247" target="_blank" rel="noopener noreferrer"
                className="hover:text-primary">
               <SiWhatsapp className="h-6 w-6" />
             </a>
@@ -43,8 +43,7 @@ export function Footer() {
 
         <div>
           <h3 className="font-semibold mb-4">Business Hours</h3>
-          <p>Monday - Saturday: 10:00 AM - 8:00 PM</p>
-          <p>Sunday: 11:00 AM - 6:00 PM</p>
+          <p>All Days: 10:00 AM - 11:00 PM</p>
         </div>
       </div>
     </footer>
