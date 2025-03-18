@@ -16,6 +16,7 @@ import { Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Product } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 
 export function ProductList() {
   const { toast } = useToast();
@@ -56,9 +57,12 @@ export function ProductList() {
       });
     },
     onError: (error: Error, _, context) => {
+      // Rollback to the previous value and force a refresh
       if (context?.previousProducts) {
         queryClient.setQueryData(["/api/products"], context.previousProducts);
       }
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+
       toast({
         title: "Error",
         description: error.message,
