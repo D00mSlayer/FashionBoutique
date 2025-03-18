@@ -17,15 +17,21 @@ import { useToast } from "@/hooks/use-toast";
 import type { Product } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { ProductListControls } from "./ProductListControls";
+import { useState } from "react";
+
+type SortOption = "date-desc" | "date-asc" | "name-asc" | "name-desc";
 
 export function ProductList() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [sortBy, setSortBy] = useState<SortOption>("date-desc");
+  const [category, setCategory] = useState<string | "all">("all");
+  const [showNewCollectionOnly, setShowNewCollectionOnly] = useState(false);
 
-  const { data: products, isLoading } = useQuery<Product[]>({
+  const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
-    staleTime: 0, // Always fetch fresh data
-    retry: false, // Don't retry on failure
+    staleTime: 0,
+    retry: false,
   });
 
   const { mutate: deleteProduct, isPending: isDeleting } = useMutation({
@@ -57,7 +63,6 @@ export function ProductList() {
       });
     },
     onError: (error: Error, _, context) => {
-      // Rollback to the previous value and force a refresh
       if (context?.previousProducts) {
         queryClient.setQueryData(["/api/products"], context.previousProducts);
       }
@@ -70,6 +75,27 @@ export function ProductList() {
       });
     }
   });
+
+  const filteredAndSortedProducts = products
+    .filter(product => {
+      if (category !== "all" && product.category !== category) return false;
+      if (showNewCollectionOnly && !product.isNewCollection) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "date-desc":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "date-asc":
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case "name-asc":
+          return a.name.localeCompare(b.name);
+        case "name-desc":
+          return b.name.localeCompare(a.name);
+        default:
+          return 0;
+      }
+    });
 
   if (isLoading) {
     return (
@@ -98,8 +124,18 @@ export function ProductList() {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Existing Products</h2>
+
+      <ProductListControls
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        category={category}
+        onCategoryChange={setCategory}
+        showNewCollectionOnly={showNewCollectionOnly}
+        onNewCollectionChange={setShowNewCollectionOnly}
+      />
+
       <div className="grid gap-4">
-        {products?.map((product) => (
+        {filteredAndSortedProducts.map((product) => (
           <Card key={product.id}>
             <CardContent className="p-4 flex items-center">
               {/* Product Image */}
