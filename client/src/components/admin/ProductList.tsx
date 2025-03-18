@@ -23,22 +23,25 @@ export function ProductList() {
 
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
+    staleTime: 0, // Always fetch fresh data
+    retry: false, // Don't retry on failure
   });
 
   const { mutate: deleteProduct, isPending: isDeleting } = useMutation({
     mutationFn: async (productId: number) => {
-      await apiRequest("DELETE", `/api/products/${productId}`);
+      const response = await apiRequest("DELETE", `/api/products/${productId}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to delete product");
+      }
     },
     onMutate: async (productId) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["/api/products"] });
-
-      // Snapshot the previous value
       const previousProducts = queryClient.getQueryData<Product[]>(["/api/products"]);
 
-      // Optimistically update to the new value
       if (previousProducts) {
-        queryClient.setQueryData<Product[]>(["/api/products"], 
+        queryClient.setQueryData<Product[]>(
+          ["/api/products"],
           previousProducts.filter(product => product.id !== productId)
         );
       }
@@ -53,7 +56,6 @@ export function ProductList() {
       });
     },
     onError: (error: Error, _, context) => {
-      // Rollback to the previous value
       if (context?.previousProducts) {
         queryClient.setQueryData(["/api/products"], context.previousProducts);
       }
