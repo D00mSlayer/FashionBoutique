@@ -12,8 +12,10 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getAllProducts(): Promise<Product[]> {
-    return await db.select().from(products)
+    const allProducts = await db.select().from(products)
       .orderBy(desc(products.createdAt));
+    console.log("Retrieved all products:", allProducts);
+    return allProducts;
   }
 
   async getNewCollection(): Promise<Product[]> {
@@ -37,7 +39,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteProduct(id: number): Promise<void> {
-    await db.delete(products).where(eq(products.id, id));
+    console.log(`Attempting to delete product with ID: ${id}`);
+    try {
+      const result = await db.delete(products)
+        .where(eq(products.id, id))
+        .returning({ deletedId: products.id });
+
+      console.log("Delete operation result:", result);
+
+      if (!result.length) {
+        throw new Error(`Product with ID ${id} not found`);
+      }
+    } catch (error) {
+      console.error(`Error deleting product ${id}:`, error);
+      throw error;
+    }
   }
 }
 

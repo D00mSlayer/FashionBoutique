@@ -136,15 +136,27 @@ app.post("/api/products", upload.array("media", 10), async (req, res) => {
   app.delete("/api/products/:id", async (req, res) => {
     try {
       const productId = parseInt(req.params.id);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+
       console.log("Deleting product with ID:", productId);
 
       await storage.deleteProduct(productId);
       console.log("Successfully deleted product:", productId);
 
+      // Verify deletion
+      const products = await storage.getAllProducts();
+      console.log("Remaining products:", products.length);
+
       res.status(204).end();
     } catch (error) {
       console.error("Error deleting product:", error);
-      res.status(500).json({ message: "Failed to delete product" });
+      if (error instanceof Error && error.message.includes("not found")) {
+        res.status(404).json({ message: "Product not found" });
+      } else {
+        res.status(500).json({ message: "Failed to delete product" });
+      }
     }
   });
 
