@@ -25,9 +25,25 @@ export function ProductList() {
     queryKey: ["/api/products"],
   });
 
-  const { mutate: deleteProduct } = useMutation({
+  const { mutate: deleteProduct, isPending: isDeleting } = useMutation({
     mutationFn: async (productId: number) => {
       await apiRequest("DELETE", `/api/products/${productId}`);
+    },
+    onMutate: async (productId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["/api/products"] });
+
+      // Snapshot the previous value
+      const previousProducts = queryClient.getQueryData<Product[]>(["/api/products"]);
+
+      // Optimistically update to the new value
+      if (previousProducts) {
+        queryClient.setQueryData<Product[]>(["/api/products"], 
+          previousProducts.filter(product => product.id !== productId)
+        );
+      }
+
+      return { previousProducts };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
@@ -36,7 +52,11 @@ export function ProductList() {
         description: "Product deleted successfully"
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _, context) => {
+      // Rollback to the previous value
+      if (context?.previousProducts) {
+        queryClient.setQueryData(["/api/products"], context.previousProducts);
+      }
       toast({
         title: "Error",
         description: error.message,
@@ -46,7 +66,27 @@ export function ProductList() {
   });
 
   if (isLoading) {
-    return <div>Loading products...</div>;
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Existing Products</h2>
+        <div className="grid gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="animate-pulse flex space-x-4">
+                  <div className="w-24 h-24 bg-muted rounded" />
+                  <div className="flex-1 space-y-3">
+                    <div className="h-4 bg-muted rounded w-3/4" />
+                    <div className="h-3 bg-muted rounded w-1/2" />
+                    <div className="h-3 bg-muted rounded w-1/4" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -91,7 +131,12 @@ export function ProductList() {
               {/* Delete Button */}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="icon" className="ml-4">
+                  <Button 
+                    variant="destructive" 
+                    size="icon" 
+                    className="ml-4"
+                    disabled={isDeleting}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </AlertDialogTrigger>
@@ -106,8 +151,9 @@ export function ProductList() {
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={() => deleteProduct(product.id)}
+                      disabled={isDeleting}
                     >
-                      Delete
+                      {isDeleting ? "Deleting..." : "Delete"}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
