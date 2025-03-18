@@ -20,7 +20,7 @@ import { apiRequest } from "@/lib/queryClient";
 export function ProductList() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
   });
@@ -55,14 +55,43 @@ export function ProductList() {
       <div className="grid gap-4">
         {products?.map((product) => (
           <Card key={product.id}>
-            <CardContent className="p-4 flex justify-between items-center">
-              <div>
+            <CardContent className="p-4 flex items-center">
+              {/* Product Image */}
+              {product.images && product.images.length > 0 && (
+                <div className="w-24 h-24 mr-4 rounded-lg overflow-hidden flex-shrink-0">
+                  {product.images[0].startsWith('data:video') ? (
+                    <video
+                      src={product.images[0]}
+                      className="w-full h-full object-cover"
+                      controls
+                    />
+                  ) : (
+                    <img
+                      src={product.images[0]}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Product Info */}
+              <div className="flex-grow">
                 <h3 className="font-medium">{product.name}</h3>
                 <p className="text-sm text-muted-foreground">{product.category}</p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {product.sizes.map((size) => (
+                    <span key={size} className="text-xs bg-muted px-2 py-1 rounded">
+                      {size}
+                    </span>
+                  ))}
+                </div>
               </div>
+
+              {/* Delete Button */}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="icon">
+                  <Button variant="destructive" size="icon" className="ml-4">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </AlertDialogTrigger>
