@@ -12,6 +12,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from 'react';
 import { X } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
 const availableSizes = [
   "Free Size",
@@ -40,6 +41,7 @@ export function ProductForm() {
   const [previews, setPreviews] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
@@ -108,13 +110,11 @@ export function ProductForm() {
       formData.append("tags", JSON.stringify(values.tags));
 
       // Add media files
-      if (Array.isArray(values.images)) {
-        values.images.forEach((file) => {
-          if (file instanceof File) {
-            formData.append("media", file);
-          }
-        });
-      }
+      selectedFiles.forEach((file) => {
+        formData.append("media", file);
+      });
+
+      console.log("Submitting form data with files:", selectedFiles.length);
 
       const res = await fetch("/api/products", {
         method: "POST",
@@ -130,12 +130,15 @@ export function ProductForm() {
       return res.json();
     },
     onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({
         title: "Success",
         description: "Product added successfully"
       });
       setPreviews([]);
       setTags([]);
+      setSelectedFiles([]);
       form.reset();
     },
     onError: (error: Error) => {
@@ -152,9 +155,10 @@ export function ProductForm() {
     if (!files?.length) return;
 
     const fileArray = Array.from(files);
-    form.setValue("images", fileArray);
+    setSelectedFiles(fileArray);
 
     // Generate previews
+    setPreviews([]); // Clear existing previews
     fileArray.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -165,9 +169,7 @@ export function ProductForm() {
   };
 
   const removeFile = (index: number) => {
-    const currentFiles = form.getValues("images");
-    const newFiles = currentFiles.filter((_, i) => i !== index);
-    form.setValue("images", newFiles);
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
     setPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -177,7 +179,7 @@ export function ProductForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" encType="multipart/form-data">
         <FormField
           control={form.control}
           name="name"
