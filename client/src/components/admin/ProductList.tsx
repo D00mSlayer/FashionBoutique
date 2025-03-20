@@ -28,7 +28,7 @@ interface ProductResponse {
 
 type SortOption = "date-desc" | "date-asc" | "name-asc" | "name-desc";
 
-export function ProductList() {
+export default function ProductList() {
   const { toast } = useToast();
   const [sortBy, setSortBy] = useState<SortOption>("date-desc");
   const [category, setCategory] = useState<string | "all">("all");

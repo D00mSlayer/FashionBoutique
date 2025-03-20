@@ -20,14 +20,14 @@ export const products = pgTable("products", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const adminCredentials = {
-  username: "admin",
-  password: "admin123" // This should be changed in production
-};
+export interface AdminCredentials {
+  username: string;
+  password: string;
+}
 
 export const categories = [
   "Tops",
-  "Dresses",
+  "Dresses", 
   "Ethnic Wear",
   "Bottoms",
   "Accessories"

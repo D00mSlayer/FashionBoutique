@@ -36,7 +36,7 @@ const availableColors = [
   "Floral", "Striped", "Checked", "Polka Dots"
 ] as const;
 
-export function ProductForm() {
+export default function ProductForm() {
   const { toast } = useToast();
   const [previews, setPreviews] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);

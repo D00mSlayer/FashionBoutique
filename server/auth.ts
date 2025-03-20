@@ -3,7 +3,16 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
 import { storage } from "./storage";
-import { adminCredentials } from "@shared/schema";
+import type { AdminCredentials } from "@shared/schema";
+
+if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
+  throw new Error("Admin credentials must be set in environment variables: ADMIN_USERNAME and ADMIN_PASSWORD");
+}
+
+const adminCredentials: AdminCredentials = {
+  username: process.env.ADMIN_USERNAME,
+  password: process.env.ADMIN_PASSWORD
+};
 
 declare global {
   namespace Express {
