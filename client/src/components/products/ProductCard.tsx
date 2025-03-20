@@ -111,8 +111,8 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="overflow-hidden group">
       <CardContent className="p-0">
+        {/* Media Section with Skeleton */}
         <div className="relative aspect-square bg-muted">
-          {/* Media Display */}
           <div 
             ref={mediaRef}
             className="relative w-full h-full"
@@ -203,6 +203,8 @@ export function ProductCard({ product }: ProductCardProps) {
             </Badge>
           )}
         </div>
+
+        {/* Product Details - Show Immediately */}
         <div className="p-4">
           <h3 className="font-semibold">{product.name}</h3>
           <p className="text-sm text-muted-foreground mt-1">
