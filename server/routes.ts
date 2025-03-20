@@ -110,6 +110,16 @@ export async function registerRoutes(app: Express) {
       media: `${p.media.length} items`
     })));
 
+    // Transform response for consistency
+    const lightProducts = result.items.map(product => ({
+      ...product,
+      // Send both thumbnail and full URLs for immediate display
+      media: Array.isArray(product.media) ? product.media.map(item => ({
+        thumbnail: item.thumbnail,
+        full: item.full // Send full version for image preview
+      })) : []
+    }));
+
     res.set({
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       'Pragma': 'no-cache',
@@ -117,7 +127,7 @@ export async function registerRoutes(app: Express) {
     });
 
     res.json({
-      items: result.items,
+      items: lightProducts,
       total: result.total,
       hasMore: result.hasMore
     });
