@@ -44,17 +44,18 @@ export function ImagePreview({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[90vw] max-h-[90vh] p-0">
-        <div className="relative w-full h-full">
+      <DialogContent className="max-w-[90vw] p-4 sm:p-6 md:p-8">
+        <div className="relative w-full h-auto">
           {isLoading && (
-            <div className="absolute inset-0 bg-muted animate-pulse" />
+            <div className="absolute inset-0 bg-muted animate-pulse rounded" />
           )}
           <img
             src={images[currentIndex].full}
             alt={`${productName} full view`}
-            className={`w-full h-full object-contain transition-opacity duration-300 ${
+            className={`w-full object-contain transition-opacity duration-300 rounded ${
               isLoading ? 'opacity-0' : 'opacity-100'
             }`}
+            style={{ maxHeight: "70vh" }}
             onLoad={() => setIsLoading(false)}
           />
           {images.length > 1 && (
