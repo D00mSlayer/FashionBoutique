@@ -2,6 +2,8 @@ import * as React from "react";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +47,10 @@ export function ImagePreview({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[90vw] p-4 sm:p-6 md:p-8">
+        <div className="sr-only">
+          <DialogTitle>{productName}</DialogTitle>
+          <DialogDescription>Image {currentIndex + 1} of {images.length}</DialogDescription>
+        </div>
         <div className="relative w-full h-auto">
           {isLoading && (
             <div className="absolute inset-0 bg-muted animate-pulse rounded" />
