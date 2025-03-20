@@ -28,40 +28,87 @@ async function retryOperation<T>(
   throw new Error("Operation failed after all retry attempts");
 }
 
+export interface PagedResult<T> {
+  items: T[];
+  total: number;
+  hasMore: boolean;
+}
+
 export interface IStorage {
-  getAllProducts(): Promise<Product[]>;
-  getNewCollection(): Promise<Product[]>;
-  getProductsByCategory(category: string): Promise<Product[]>;
+  getAllProducts(page?: number, limit?: number): Promise<PagedResult<Product>>;
+  getNewCollection(page?: number, limit?: number): Promise<PagedResult<Product>>;
+  getProductsByCategory(category: string, page?: number, limit?: number): Promise<PagedResult<Product>>;
   createProduct(product: InsertProduct): Promise<Product>;
   deleteProduct(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
-  async getAllProducts(): Promise<Product[]> {
+  private async getCount(query: any): Promise<number> {
+    const [result] = await db.select({ count: db.fn.count() }).from(query);
+    return Number(result.count);
+  }
+
+  async getAllProducts(page = 1, limit = 12): Promise<PagedResult<Product>> {
     return retryOperation(async () => {
-      console.log("Fetching all products from database at:", new Date().toISOString());
-      const allProducts = await db.select().from(products)
-        .orderBy(desc(products.createdAt));
-      console.log("Retrieved products count:", allProducts.length);
-      return allProducts;
+      const offset = (page - 1) * limit;
+      console.log("Fetching products page:", page, "limit:", limit, "at:", new Date().toISOString());
+
+      const [items, total] = await Promise.all([
+        db.select().from(products)
+          .orderBy(desc(products.createdAt))
+          .limit(limit)
+          .offset(offset),
+        this.getCount(products)
+      ]);
+
+      console.log("Retrieved products count:", items.length, "of total:", total);
+      return {
+        items,
+        total,
+        hasMore: offset + items.length < total
+      };
     });
   }
 
-  async getNewCollection(): Promise<Product[]> {
+  async getNewCollection(page = 1, limit = 12): Promise<PagedResult<Product>> {
     return retryOperation(async () => {
-      console.log("Fetching new collection products at:", new Date().toISOString());
-      return await db.select().from(products)
-        .where(eq(products.isNewCollection, true))
-        .orderBy(desc(products.createdAt));
+      const offset = (page - 1) * limit;
+      console.log("Fetching new collection products page:", page, "at:", new Date().toISOString());
+
+      const query = db.select().from(products).where(eq(products.isNewCollection, true));
+      const [items, total] = await Promise.all([
+        query.orderBy(desc(products.createdAt))
+          .limit(limit)
+          .offset(offset),
+        this.getCount(query)
+      ]);
+
+      return {
+        items,
+        total,
+        hasMore: offset + items.length < total
+      };
     });
   }
 
-  async getProductsByCategory(category: string): Promise<Product[]> {
+  async getProductsByCategory(category: string, page = 1, limit = 12): Promise<PagedResult<Product>> {
     return retryOperation(async () => {
-      console.log("Fetching products by category:", category, "at:", new Date().toISOString());
-      return await db.select().from(products)
-        .where(eq(products.category, category))
-        .orderBy(desc(products.createdAt));
+      const offset = (page - 1) * limit;
+      console.log("Fetching products by category:", category, "page:", page, "at:", new Date().toISOString());
+
+      const query = db.select().from(products).where(eq(products.category, category));
+      const [items, total] = await Promise.all([
+        query.orderBy(desc(products.createdAt))
+          .limit(limit)
+          .offset(offset),
+        this.getCount(query)
+      ]);
+
+      return {
+        items,
+        total,
+        hasMore: offset + items.length < total
+      };
     });
   }
 

@@ -17,14 +17,17 @@ const upload = multer({
 
 export async function registerRoutes(app: Express) {
   app.get("/api/products", async (req, res) => {
-    const products = await storage.getAllProducts();
-    console.log("Fetching all products:", products.map(p => ({
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 12;
+
+    const result = await storage.getAllProducts(page, limit);
+    console.log("Fetching all products:", result.items.map(p => ({
       ...p,
       media: `${p.media.length} items`
     })));
 
     // Transform response to reduce initial payload size
-    const lightProducts = products.map(product => ({
+    const lightProducts = result.items.map(product => ({
       ...product,
       // Only send thumbnails initially
       media: product.media.map(item => ({
@@ -39,7 +42,11 @@ export async function registerRoutes(app: Express) {
       'Expires': '0'
     });
 
-    res.json(lightProducts);
+    res.json({
+      items: lightProducts,
+      total: result.total,
+      hasMore: result.hasMore
+    });
   });
 
   // Endpoint for lazy loading full-size media
@@ -51,8 +58,8 @@ export async function registerRoutes(app: Express) {
       return res.status(400).json({ message: "Invalid request parameters" });
     }
 
-    const products = await storage.getAllProducts();
-    const product = products.find(p => p.id === productId);
+    const result = await storage.getAllProducts();
+    const product = result.items.find(p => p.id === productId);
 
     if (!product || !product.media[mediaIndex]) {
       return res.status(404).json({ message: "Media not found" });
@@ -64,7 +71,10 @@ export async function registerRoutes(app: Express) {
   });
 
   app.get("/api/products/new-collection", async (req, res) => {
-    const products = await storage.getNewCollection();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 12;
+
+    const result = await storage.getNewCollection(page, limit);
     console.log("Fetching new collection products");
 
     res.set({
@@ -73,12 +83,19 @@ export async function registerRoutes(app: Express) {
       'Expires': '0'
     });
 
-    res.json(products);
+    res.json({
+      items: result.items,
+      total: result.total,
+      hasMore: result.hasMore
+    });
   });
 
   app.get("/api/products/category/:category", async (req, res) => {
-    const products = await storage.getProductsByCategory(req.params.category);
-    console.log("Fetching products by category:", req.params.category, products.map(p => ({
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 12;
+
+    const result = await storage.getProductsByCategory(req.params.category, page, limit);
+    console.log("Fetching products by category:", req.params.category, result.items.map(p => ({
       ...p,
       media: `${p.media.length} items`
     })));
@@ -89,7 +106,11 @@ export async function registerRoutes(app: Express) {
       'Expires': '0'
     });
 
-    res.json(products);
+    res.json({
+      items: result.items,
+      total: result.total,
+      hasMore: result.hasMore
+    });
   });
 
   app.post("/api/products", upload.array("media", 10), async (req, res) => {
