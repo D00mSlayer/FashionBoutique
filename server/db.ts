@@ -11,12 +11,14 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Create a new pool with explicit SSL settings and a limited number of connections
+// Create a new pool with explicit SSL settings and more robust connection handling
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
   ssl: true,
-  max: 1, // Limit to single connection to prevent connection pooling issues
-  idleTimeoutMillis: 0 // Close idle connections immediately
+  max: 1, // Single connection to prevent pooling issues
+  connectionTimeoutMillis: 5000, // 5 second timeout
+  idleTimeoutMillis: 0, // Close idle connections immediately
+  allowExitOnIdle: true // Allow the pool to exit when all clients have finished
 });
 
 // Create drizzle instance with schema
@@ -28,12 +30,17 @@ pool.on('connect', () => {
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-  process.exit(-1);
+  console.error('Database connection error:', err);
+  // Don't exit process, let the connection retry
 });
 
 // Ensure clean shutdown
-process.on('SIGTERM', () => {
-  console.log('Closing all database connections...');
-  pool.end();
+process.on('SIGTERM', async () => {
+  console.log('Shutting down...');
+  await pool.end();
+});
+
+process.on('SIGINT', async () => {
+  console.log('Shutting down...');
+  await pool.end();
 });
