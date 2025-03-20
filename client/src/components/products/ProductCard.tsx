@@ -5,7 +5,7 @@ import { openWhatsApp } from "@/lib/whatsapp";
 import { ImagePreview } from "./ImagePreview";
 import type { Product } from "@shared/schema";
 import { useState, useRef, TouchEvent } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
@@ -15,6 +15,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const mediaRef = useRef<HTMLDivElement>(null);
 
@@ -69,54 +70,68 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="overflow-hidden group">
       <CardContent className="p-0">
-        {/* Media Section with Skeleton */}
-        <div className="relative aspect-square bg-muted">
+        {/* Media Section */}
+        <div className="relative bg-muted">
           <div 
             ref={mediaRef}
-            className="relative w-full h-full"
+            className="relative aspect-square"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
           >
             {product.media.length > 0 ? (
               <>
-                {isVideo(currentMediaItem.thumbnail) ? (
+                {isVideo(currentMediaItem.full) ? (
                   <video
-                    key={currentMediaIndex}
-                    src={currentMediaItem.thumbnail}
-                    className={`object-cover w-full h-full transition-opacity duration-300 ${
-                      isLoading ? 'opacity-0' : 'opacity-100'
-                    }`}
+                    src={currentMediaItem.full}
+                    className="w-full h-full object-cover"
                     controls
                     muted
                     playsInline
-                    onLoadedData={() => setIsLoading(false)}
                     preload="metadata"
+                    onLoadedData={() => setIsLoading(false)}
                   />
                 ) : (
-                  <ImagePreview
-                    images={product.media}
-                    productName={product.name}
-                  />
-                )}
-
-                {/* Loading Skeleton */}
-                {isLoading && (
-                  <div className="absolute inset-0 bg-muted animate-pulse" />
+                  <div 
+                    className="relative w-full h-full cursor-zoom-in"
+                    onClick={() => setShowPreview(true)}
+                  >
+                    {isLoading && (
+                      <div className="absolute inset-0 bg-muted animate-pulse" />
+                    )}
+                    <img
+                      src={currentMediaItem.thumbnail}
+                      alt={`${product.name} preview`}
+                      className={`w-full h-full object-cover transition-opacity duration-300 ${
+                        isLoading ? 'opacity-0' : 'opacity-100'
+                      }`}
+                      onLoad={() => setIsLoading(false)}
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ZoomIn className="w-8 h-8 text-white drop-shadow-lg" />
+                    </div>
+                  </div>
                 )}
 
                 {/* Navigation Arrows */}
                 {product.media.length > 1 && (
                   <>
                     <button
-                      onClick={previousMedia}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        previousMedia();
+                      }}
                       className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                       aria-label="Previous image"
                     >
                       <ChevronLeft className="h-6 w-6" />
                     </button>
                     <button
-                      onClick={nextMedia}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nextMedia();
+                      }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                       aria-label="Next image"
                     >
@@ -128,7 +143,11 @@ export function ProductCard({ product }: ProductCardProps) {
                       {product.media.map((_, index) => (
                         <button
                           key={index}
-                          onClick={() => setCurrentMediaIndex(index)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentMediaIndex(index);
+                            setIsLoading(true);
+                          }}
                           className={`w-2 h-2 rounded-full ${
                             index === currentMediaIndex
                               ? "bg-white"
@@ -140,6 +159,13 @@ export function ProductCard({ product }: ProductCardProps) {
                     </div>
                   </>
                 )}
+
+                {/* New Collection Badge */}
+                {product.isNewCollection && (
+                  <Badge className="absolute top-2 right-2 z-10">
+                    New Collection
+                  </Badge>
+                )}
               </>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -147,13 +173,6 @@ export function ProductCard({ product }: ProductCardProps) {
               </div>
             )}
           </div>
-
-          {/* New Collection Badge */}
-          {product.isNewCollection && (
-            <Badge className="absolute top-2 right-2 z-10">
-              New Collection
-            </Badge>
-          )}
         </div>
 
         {/* Product Details */}
@@ -187,6 +206,17 @@ export function ProductCard({ product }: ProductCardProps) {
           Inquire on WhatsApp
         </Button>
       </CardFooter>
+
+      {/* Image Preview Dialog */}
+      {!isVideo(currentMediaItem?.full) && (
+        <ImagePreview
+          images={product.media}
+          productName={product.name}
+          isOpen={showPreview}
+          onClose={() => setShowPreview(false)}
+          initialIndex={currentMediaIndex}
+        />
+      )}
     </Card>
   );
 }
