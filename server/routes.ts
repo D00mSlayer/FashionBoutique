@@ -20,17 +20,19 @@ export async function registerRoutes(app: Express) {
     const products = await storage.getAllProducts();
     console.log("Fetching all products:", products.map(p => ({
       ...p,
-      images: `${p.images.length} images`
+      media: `${p.media.length} items`
     })));
 
     // Transform response to reduce initial payload size
     const lightProducts = products.map(product => ({
       ...product,
-      // Only send first image URL initially
-      images: [product.images[0]]
+      // Only send thumbnails initially
+      media: product.media.map(item => ({
+        thumbnail: item.thumbnail,
+        full: null // Don't send full version initially
+      }))
     }));
 
-    // Disable caching for this endpoint
     res.set({
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       'Pragma': 'no-cache',
@@ -40,30 +42,31 @@ export async function registerRoutes(app: Express) {
     res.json(lightProducts);
   });
 
-  // New endpoint for lazy loading remaining images
-  app.get("/api/products/:id/media", async (req, res) => {
+  // Endpoint for lazy loading full-size media
+  app.get("/api/products/:id/media/:index", async (req, res) => {
     const productId = parseInt(req.params.id);
-    if (isNaN(productId)) {
-      return res.status(400).json({ message: "Invalid product ID" });
+    const mediaIndex = parseInt(req.params.index);
+
+    if (isNaN(productId) || isNaN(mediaIndex)) {
+      return res.status(400).json({ message: "Invalid request parameters" });
     }
 
     const products = await storage.getAllProducts();
     const product = products.find(p => p.id === productId);
 
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+    if (!product || !product.media[mediaIndex]) {
+      return res.status(404).json({ message: "Media not found" });
     }
 
-    // Return all images except the first one which was already sent
     res.json({
-      images: product.images.slice(1)
+      full: product.media[mediaIndex].full
     });
   });
 
   app.get("/api/products/new-collection", async (req, res) => {
     const products = await storage.getNewCollection();
+    console.log("Fetching new collection products");
 
-    // Disable caching
     res.set({
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       'Pragma': 'no-cache',
@@ -77,10 +80,9 @@ export async function registerRoutes(app: Express) {
     const products = await storage.getProductsByCategory(req.params.category);
     console.log("Fetching products by category:", req.params.category, products.map(p => ({
       ...p,
-      images: `${p.images.length} images`
+      media: `${p.media.length} items`
     })));
 
-    // Disable caching
     res.set({
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       'Pragma': 'no-cache',
@@ -94,35 +96,19 @@ export async function registerRoutes(app: Express) {
     try {
       console.log("Received product data:", req.body);
       console.log("Received files:", req.files?.length, "files");
-      console.log("Files details:", (req.files as Express.Multer.File[])?.map(f => ({
-        name: f.originalname,
-        type: f.mimetype,
-        size: f.size
-      })));
 
       const files = req.files as Express.Multer.File[] | undefined;
-      const mediaUrls: string[] = [];
+      const processedMedia = [];
 
-      // Process and compress media files
       if (files && files.length > 0) {
         for (const file of files) {
           try {
             if (isVideo(file.mimetype)) {
-              try {
-                const base64Video = file.buffer.toString('base64');
-                const videoUrl = `data:${file.mimetype};base64,${base64Video}`;
-                mediaUrls.push(videoUrl);
-                console.log("Processed video, size:", Math.round(videoUrl.length / 1024), "KB");
-              } catch (error) {
-                console.error("Error processing video file:", error);
-              }
+              const processed = await compressVideo(file.buffer);
+              processedMedia.push(processed);
             } else if (isImage(file.mimetype)) {
-              const compressedBuffer = await compressImage(file.buffer);
-              const base64Url = `data:${file.mimetype};base64,${compressedBuffer.toString("base64")}`;
-              mediaUrls.push(base64Url);
-              console.log("Processed image, size:", Math.round(base64Url.length / 1024), "KB");
-            } else {
-              console.log("Unsupported file type:", file.mimetype);
+              const processed = await compressImage(file.buffer);
+              processedMedia.push(processed);
             }
           } catch (error) {
             console.error("Error processing media file:", error);
@@ -130,30 +116,19 @@ export async function registerRoutes(app: Express) {
         }
       }
 
-      // Parse form data
       const productData = {
         name: req.body.name,
         description: req.body.description,
         category: req.body.category,
         sizes: JSON.parse(req.body.sizes || "[]"),
         colors: JSON.parse(req.body.colors || "[]"),
-        images: mediaUrls,
+        media: processedMedia,
         tags: JSON.parse(req.body.tags || "[]"),
         isNewCollection: req.body.isNewCollection === "true"
       };
 
-      console.log("Creating product with data:", {
-        ...productData,
-        images: mediaUrls.map(url => url.substring(0, 50) + '...')
-      });
-
       const validatedData = insertProductSchema.parse(productData);
       const product = await storage.createProduct(validatedData);
-
-      console.log("Product saved to database:", {
-        ...product,
-        images: product.images.map(img => img.substring(0, 50) + '...')
-      });
 
       res.json(product);
     } catch (error) {

@@ -19,17 +19,14 @@ export function ProductCard({ product }: ProductCardProps) {
   const mediaRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  // Lazy load remaining images
+  // Lazy load full-size media
   const { data: additionalMedia } = useQuery({
     queryKey: [`/api/products/${product.id}/media`],
     enabled: mediaRef.current !== null, // Only fetch when component is mounted
     staleTime: Infinity, // Cache the result indefinitely
   });
 
-  const allMedia = additionalMedia 
-    ? [...product.images, ...additionalMedia.images]
-    : product.images;
-
+  const allMedia = product.media;
   const isVideo = (url: string) => url.startsWith('data:video');
 
   // Minimum swipe distance for navigation (in pixels)
@@ -87,10 +84,10 @@ export function ProductCard({ product }: ProductCardProps) {
           >
             {allMedia.length > 0 ? (
               <>
-                {isVideo(allMedia[currentMediaIndex]) ? (
+                {isVideo(allMedia[currentMediaIndex].thumbnail) ? (
                   <video
                     key={currentMediaIndex}
-                    src={allMedia[currentMediaIndex]}
+                    src={allMedia[currentMediaIndex].thumbnail}
                     className={`object-cover w-full h-full transition-opacity duration-300 ${
                       isLoading ? 'opacity-0' : 'opacity-100'
                     }`}
@@ -103,7 +100,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 ) : (
                   <img
                     key={currentMediaIndex}
-                    src={allMedia[currentMediaIndex]}
+                    src={allMedia[currentMediaIndex].thumbnail}
                     alt={`${product.name} - Image ${currentMediaIndex + 1}`}
                     className={`object-cover w-full h-full transition-opacity duration-300 ${
                       isLoading ? 'opacity-0' : 'opacity-100'
