@@ -1,32 +1,33 @@
 import { Card } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { config } from "@shared/config";
 
 export default function Contact() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Visit Our Store</h1>
-      
+
       <div className="grid md:grid-cols-2 gap-8">
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <MapPin className="h-5 w-5 text-primary" />
-              <p>123, 2nd Avenue , 5th Main Road, Teacher's Colony, Koramangala 1st Block, Bangalore - 560034</p>
+              <p>{config.contact.address}</p>
             </div>
             <div className="flex items-center gap-3">
               <Phone className="h-5 w-5 text-primary" />
-              <p>+91 63638 40247</p>
+              <p>{config.contact.phone}</p>
             </div>
             <div className="flex items-center gap-3">
               <Mail className="h-5 w-5 text-primary" />
-              <p>info@vibachic.in</p>
+              <p>{config.contact.email}</p>
             </div>
             <div className="flex items-center gap-3">
               <Clock className="h-5 w-5 text-primary" />
               <div>
                 <p>All Days: 10:00 AM - 10:00 PM</p>
-                </div>
+              </div>
             </div>
           </div>
         </Card>

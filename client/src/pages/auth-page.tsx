@@ -28,7 +28,7 @@ export default function AuthPage() {
 
   // Redirect if already logged in
   if (user) {
-    return <Redirect to="/admin" />;
+    return <Redirect to="/_dashboard_panel" />;
   }
 
   return (

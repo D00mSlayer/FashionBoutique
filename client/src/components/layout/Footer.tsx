@@ -1,5 +1,6 @@
 import { SiInstagram, SiFacebook, SiWhatsapp } from "react-icons/si";
 import { MapPin, Phone, Mail } from "lucide-react";
+import { config } from "@shared/config";
 
 export function Footer() {
   return (
@@ -10,15 +11,15 @@ export function Footer() {
           <div className="space-y-2">
             <p className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              123, 2nd Avenue, 5th Main Road, Teacher's Colony, Koramangala 1st Block, Bangalore - 560034
+              {config.contact.address}
             </p>
             <p className="flex items-center gap-2">
               <Phone className="h-4 w-4" />
-              +91 63638 40247
+              {config.contact.phone}
             </p>
             <p className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              info@vibachic.in
+              {config.contact.email}
             </p>
           </div>
         </div>
@@ -26,15 +27,15 @@ export function Footer() {
         <div>
           <h3 className="font-semibold mb-4">Social Media</h3>
           <div className="flex space-x-4">
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" 
+            <a href={config.social.instagram} target="_blank" rel="noopener noreferrer" 
                className="hover:text-primary">
               <SiInstagram className="h-6 w-6" />
             </a>
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"
+            <a href={config.social.facebook} target="_blank" rel="noopener noreferrer"
                className="hover:text-primary">
               <SiFacebook className="h-6 w-6" />
             </a>
-            <a href="https://wa.me/916363840247" target="_blank" rel="noopener noreferrer"
+            <a href={config.social.whatsapp} target="_blank" rel="noopener noreferrer"
                className="hover:text-primary">
               <SiWhatsapp className="h-6 w-6" />
             </a>
@@ -43,7 +44,7 @@ export function Footer() {
 
         <div>
           <h3 className="font-semibold mb-4">Business Hours</h3>
-          <p>All Days: 10:00 AM - 11:00 PM</p>
+          <p>All Days: 10:00 AM - 10:00 PM</p>
         </div>
       </div>
     </footer>
