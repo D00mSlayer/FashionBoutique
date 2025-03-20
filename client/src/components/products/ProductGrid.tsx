@@ -8,8 +8,8 @@ interface ProductGridProps {
   category?: string | null;
 }
 
-export function ProductGrid({ products, isLoading = false, category }: ProductGridProps) {
-  if (isLoading && products.length === 0) {
+export function ProductGrid({ products = [], isLoading = false, category }: ProductGridProps) {
+  if (isLoading && (!products || products.length === 0)) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {[1, 2, 3, 4, 5, 6].map((key) => (
@@ -48,7 +48,7 @@ export function ProductGrid({ products, isLoading = false, category }: ProductGr
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {products.map((product) => (
+      {Array.isArray(products) && products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
     </div>
