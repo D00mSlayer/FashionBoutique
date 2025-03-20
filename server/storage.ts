@@ -96,8 +96,29 @@ export class DatabaseStorage implements IStorage {
       ]);
 
       console.log("Retrieved products count:", items.length, "of total:", total);
+      
+      // Debug media property
+      console.log("Fetching all products:", JSON.stringify(items, null, 2));
+      
+      // Check if media needs conversion from string to JSON
+      const processedItems = items.map(item => {
+        // If media is a string (serialized JSON), parse it
+        if (typeof item.media === 'string') {
+          try {
+            return {
+              ...item,
+              media: JSON.parse(item.media)
+            };
+          } catch (e) {
+            console.error("Error parsing media JSON:", e);
+            return item;
+          }
+        }
+        return item;
+      });
+      
       return {
-        items,
+        items: processedItems,
         total,
         hasMore: offset + items.length < total
       };
@@ -117,8 +138,25 @@ export class DatabaseStorage implements IStorage {
         this.getCount(baseQuery)
       ]);
 
+      // Check if media needs conversion from string to JSON
+      const processedItems = items.map(item => {
+        // If media is a string (serialized JSON), parse it
+        if (typeof item.media === 'string') {
+          try {
+            return {
+              ...item,
+              media: JSON.parse(item.media)
+            };
+          } catch (e) {
+            console.error("Error parsing media JSON:", e);
+            return item;
+          }
+        }
+        return item;
+      });
+      
       return {
-        items,
+        items: processedItems,
         total,
         hasMore: offset + items.length < total
       };
@@ -130,16 +168,34 @@ export class DatabaseStorage implements IStorage {
       const offset = (page - 1) * limit;
       console.log("Fetching products by category:", category, "page:", page, "at:", new Date().toISOString());
 
-      const baseQuery = db.select().from(products).where(eq(products.category, category));
+      const filteredProducts = db.select().from(products).where(eq(products.category, category));
       const [items, total] = await Promise.all([
-        baseQuery.orderBy(desc(products.createdAt))
+        db.select().from(filteredProducts)
+          .orderBy(desc(products.createdAt))
           .limit(limit)
           .offset(offset),
-        this.getCount(baseQuery)
+        this.getCount(products)
       ]);
 
+      // Check if media needs conversion from string to JSON
+      const processedItems = items.map(item => {
+        // If media is a string (serialized JSON), parse it
+        if (typeof item.media === 'string') {
+          try {
+            return {
+              ...item,
+              media: JSON.parse(item.media)
+            };
+          } catch (e) {
+            console.error("Error parsing media JSON:", e);
+            return item;
+          }
+        }
+        return item;
+      });
+      
       return {
-        items,
+        items: processedItems,
         total,
         hasMore: offset + items.length < total
       };

@@ -35,10 +35,11 @@ export function Header() {
 
   return (
     <header className="border-b">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         <Link href="/">
-          <span className="flex items-center cursor-pointer">
+          <span className="flex flex-col items-start cursor-pointer">
             <Logo />
+            <span className="text-sm text-muted-foreground ml-2 -mt-1">Women's Korean & Western Wear</span>
           </span>
         </Link>
 
