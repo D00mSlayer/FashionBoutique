@@ -32,13 +32,21 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="container mx-auto min-h-screen grid lg:grid-cols-2 gap-8 items-center py-8">
-      {/* Login Form */}
-      <div className="space-y-8">
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Admin Login</h2>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">Admin Login</h1>
+          <p className="text-muted-foreground">
+            Enter your credentials to access the admin panel
+          </p>
+        </div>
+
+        <div className="bg-card p-6 rounded-lg shadow-lg border">
           <Form {...loginForm}>
-            <form onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))} className="space-y-4">
+            <form 
+              onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))} 
+              className="space-y-4"
+            >
               <FormField
                 control={loginForm.control}
                 name="username"
@@ -46,12 +54,18 @@ export default function AuthPage() {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input 
+                        {...field} 
+                        className="w-full"
+                        autoComplete="username"
+                        disabled={loginMutation.isPending}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={loginForm.control}
                 name="password"
@@ -59,28 +73,32 @@ export default function AuthPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input 
+                        type="password" 
+                        {...field} 
+                        className="w-full"
+                        autoComplete="current-password"
+                        disabled={loginMutation.isPending}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={loginMutation.isPending}>
-                {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={loginMutation.isPending}
+              >
+                {loginMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Login
               </Button>
             </form>
           </Form>
         </div>
-      </div>
-
-      {/* Hero Section */}
-      <div className="hidden lg:block p-8 bg-muted rounded-lg">
-        <h1 className="text-4xl font-bold mb-4">Welcome to the Admin Panel</h1>
-        <p className="text-muted-foreground text-lg">
-          Manage your clothing store's product catalog with ease. Add new products,
-          update collections, and keep your inventory organized all in one place.
-        </p>
       </div>
     </div>
   );

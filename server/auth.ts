@@ -35,7 +35,7 @@ export function setupAuth(app: Express) {
       if (username === adminCredentials.username && password === adminCredentials.password) {
         return done(null, { username: adminCredentials.username });
       }
-      return done(null, false);
+      return done(null, false, { message: "Invalid credentials" });
     }),
   );
 
@@ -51,8 +51,17 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err, user, info) => {
+      if (err) return next(err);
+      if (!user) {
+        return res.status(401).json({ error: info?.message || "Invalid credentials" });
+      }
+      req.logIn(user, (err) => {
+        if (err) return next(err);
+        return res.json({ username: user.username });
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {
@@ -63,7 +72,7 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
+    res.json({ username: req.user.username });
   });
 }
