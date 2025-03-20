@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -30,7 +30,6 @@ export const categories = [
 
 export const categorySchema = z.enum(categories);
 
-// Base product schema with tag validation
 export const insertProductSchema = createInsertSchema(products)
   .omit({ id: true, createdAt: true })
   .extend({
@@ -39,11 +38,8 @@ export const insertProductSchema = createInsertSchema(products)
       full: z.string()
     })),
     tags: z.array(z.string().transform(val => val.toLowerCase()))
-      .default([] as string[])
-      .transform(tags => {
-        // Ensure array has unique values
-        return Array.from(new Set(tags));
-      })
+      .default([])
+      .transform(tags => Array.from(new Set(tags)))
   });
 
 export type Category = z.infer<typeof categorySchema>;

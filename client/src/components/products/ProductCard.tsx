@@ -3,9 +3,8 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { openWhatsApp } from "@/lib/whatsapp";
 import type { Product } from "@shared/schema";
-import { useState, useRef, TouchEvent, useEffect } from "react";
+import { useState, useRef, TouchEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 
 interface ProductCardProps {
   product: Product;
@@ -17,16 +16,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const mediaRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
 
-  // Lazy load full-size media
-  const { data: additionalMedia } = useQuery({
-    queryKey: [`/api/products/${product.id}/media`],
-    enabled: mediaRef.current !== null, // Only fetch when component is mounted
-    staleTime: Infinity, // Cache the result indefinitely
-  });
-
-  const allMedia = product.media;
   const isVideo = (url: string) => url.startsWith('data:video');
 
   // Minimum swipe distance for navigation (in pixels)
@@ -58,14 +48,14 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const nextMedia = () => {
     setCurrentMediaIndex((prev) =>
-      prev === allMedia.length - 1 ? 0 : prev + 1
+      prev === product.media.length - 1 ? 0 : prev + 1
     );
     setIsLoading(true);
   };
 
   const previousMedia = () => {
     setCurrentMediaIndex((prev) =>
-      prev === 0 ? allMedia.length - 1 : prev - 1
+      prev === 0 ? product.media.length - 1 : prev - 1
     );
     setIsLoading(true);
   };
@@ -82,12 +72,12 @@ export function ProductCard({ product }: ProductCardProps) {
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
           >
-            {allMedia.length > 0 ? (
+            {product.media.length > 0 ? (
               <>
-                {isVideo(allMedia[currentMediaIndex].thumbnail) ? (
+                {isVideo(product.media[currentMediaIndex].thumbnail) ? (
                   <video
                     key={currentMediaIndex}
-                    src={allMedia[currentMediaIndex].thumbnail}
+                    src={product.media[currentMediaIndex].thumbnail}
                     className={`object-cover w-full h-full transition-opacity duration-300 ${
                       isLoading ? 'opacity-0' : 'opacity-100'
                     }`}
@@ -100,7 +90,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 ) : (
                   <img
                     key={currentMediaIndex}
-                    src={allMedia[currentMediaIndex].thumbnail}
+                    src={product.media[currentMediaIndex].thumbnail}
                     alt={`${product.name} - Image ${currentMediaIndex + 1}`}
                     className={`object-cover w-full h-full transition-opacity duration-300 ${
                       isLoading ? 'opacity-0' : 'opacity-100'
@@ -116,7 +106,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 )}
 
                 {/* Navigation Arrows - Only visible on hover */}
-                {allMedia.length > 1 && (
+                {product.media.length > 1 && (
                   <>
                     <button
                       onClick={previousMedia}
@@ -133,9 +123,9 @@ export function ProductCard({ product }: ProductCardProps) {
                       <ChevronRight className="h-6 w-6" />
                     </button>
 
-                    {/* Dots Indicator - Always visible */}
+                    {/* Dots Indicator */}
                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/30 rounded-full px-2 py-1">
-                      {allMedia.map((_, index) => (
+                      {product.media.map((_, index) => (
                         <button
                           key={index}
                           onClick={() => setCurrentMediaIndex(index)}
