@@ -67,17 +67,23 @@ export function ProductCard({ product }: ProductCardProps) {
     setIsLoading(true);
   };
 
-  // Intersection Observer for lazy loading
+  // Preload first media immediately and set up lazy loading for others
   useEffect(() => {
-    if (!mediaRef.current) return;
+    if (!mediaRef.current || !product.images.length) return;
 
+    // Start loading first media immediately
+    if (currentMediaIndex === 0) {
+      setIsLoading(true);
+    }
+
+    // Set up intersection observer for subsequent media
     observerRef.current = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          // Start loading the media when it comes into view
-          setIsLoading(true);
-          // Disconnect observer after first intersection
-          observerRef.current?.disconnect();
+          // Preload next media item
+          const nextIndex = (currentMediaIndex + 1) % product.images.length;
+          const preloadMedia = new Image();
+          preloadMedia.src = product.images[nextIndex];
         }
       },
       { threshold: 0.1 }
@@ -88,7 +94,7 @@ export function ProductCard({ product }: ProductCardProps) {
     return () => {
       observerRef.current?.disconnect();
     };
-  }, []);
+  }, [currentMediaIndex, product.images]);
 
   return (
     <Card className="overflow-hidden group">
@@ -128,7 +134,7 @@ export function ProductCard({ product }: ProductCardProps) {
                     }`}
                     onLoad={() => setIsLoading(false)}
                     onError={() => handleImageError()}
-                    loading="lazy"
+                    loading={currentMediaIndex === 0 ? "eager" : "lazy"}
                   />
                 )}
 
