@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { X } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 
@@ -51,7 +51,7 @@ export function ProductForm() {
       category: categories[0],
       sizes: [],
       colors: [],
-      images: [],
+      media: [],
       tags: [],
       isNewCollection: false
     }
@@ -95,7 +95,6 @@ export function ProductForm() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: InsertProduct) => {
-      console.log("Starting form submission with values:", values);
       const formData = new FormData();
 
       // Add basic fields
@@ -114,12 +113,9 @@ export function ProductForm() {
         formData.append("media", file);
       });
 
-      console.log("Submitting form data with files:", selectedFiles.length);
-
       const res = await fetch("/api/products", {
         method: "POST",
         body: formData,
-        credentials: "include"
       });
 
       if (!res.ok) {
@@ -345,7 +341,7 @@ export function ProductForm() {
 
         <FormField
           control={form.control}
-          name="images"
+          name="media"
           render={({ field: { onChange, value, ...field } }) => (
             <FormItem>
               <FormLabel>Images & Videos</FormLabel>
