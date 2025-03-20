@@ -3,7 +3,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { openWhatsApp } from "@/lib/whatsapp";
 import type { Product } from "@shared/schema";
-import { useState } from "react";
+import { useState, useRef, TouchEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ProductCardProps {
@@ -13,11 +13,42 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const mediaRef = useRef<HTMLDivElement>(null);
+
   const isVideo = (url: string) => url.startsWith('data:video');
 
   const handleImageError = () => {
     console.error("Failed to load image for product:", product.name);
     setImageError(true);
+  };
+
+  // Minimum swipe distance for navigation (in pixels)
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      nextMedia();
+    }
+    if (isRightSwipe) {
+      previousMedia();
+    }
   };
 
   const nextMedia = () => {
@@ -37,7 +68,13 @@ export function ProductCard({ product }: ProductCardProps) {
       <CardContent className="p-0">
         <div className="relative aspect-square bg-muted">
           {/* Media Display */}
-          <div className="relative w-full h-full">
+          <div 
+            ref={mediaRef}
+            className="relative w-full h-full"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
             {product.images.length > 0 ? (
               <>
                 {isVideo(product.images[currentMediaIndex]) ? (
@@ -60,7 +97,7 @@ export function ProductCard({ product }: ProductCardProps) {
                   />
                 )}
 
-                {/* Navigation Arrows */}
+                {/* Navigation Arrows - Only visible on hover */}
                 {product.images.length > 1 && (
                   <>
                     <button
@@ -78,13 +115,13 @@ export function ProductCard({ product }: ProductCardProps) {
                       <ChevronRight className="h-6 w-6" />
                     </button>
 
-                    {/* Dots Indicator */}
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                    {/* Dots Indicator - Always visible */}
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/30 rounded-full px-2 py-1">
                       {product.images.map((_, index) => (
                         <button
                           key={index}
                           onClick={() => setCurrentMediaIndex(index)}
-                          className={`w-2 h-2 rounded-full transition-colors ${
+                          className={`w-2 h-2 rounded-full ${
                             index === currentMediaIndex
                               ? "bg-white"
                               : "bg-white/50"
