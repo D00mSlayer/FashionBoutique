@@ -11,27 +11,18 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { insertUserSchema } from "@shared/schema";
+import { loginSchema } from "@shared/schema";
 import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
 
 export default function AuthPage() {
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, loginMutation } = useAuth();
 
   const loginForm = useForm({
-    resolver: zodResolver(insertUserSchema.pick({ username: true, password: true })),
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
       password: "",
-    },
-  });
-
-  const registerForm = useForm({
-    resolver: zodResolver(insertUserSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-      email: "",
     },
   });
 
@@ -42,11 +33,10 @@ export default function AuthPage() {
 
   return (
     <div className="container mx-auto min-h-screen grid lg:grid-cols-2 gap-8 items-center py-8">
-      {/* Login/Register Forms */}
+      {/* Login Form */}
       <div className="space-y-8">
-        {/* Login Form */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Login</h2>
+          <h2 className="text-2xl font-bold">Admin Login</h2>
           <Form {...loginForm}>
             <form onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))} className="space-y-4">
               <FormField
@@ -78,58 +68,6 @@ export default function AuthPage() {
               <Button type="submit" disabled={loginMutation.isPending}>
                 {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Login
-              </Button>
-            </form>
-          </Form>
-        </div>
-
-        {/* Register Form */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Register</h2>
-          <Form {...registerForm}>
-            <form onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))} className="space-y-4">
-              <FormField
-                control={registerForm.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={registerForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={registerForm.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" disabled={registerMutation.isPending}>
-                {registerMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Register
               </Button>
             </form>
           </Form>

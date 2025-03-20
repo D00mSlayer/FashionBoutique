@@ -20,13 +20,10 @@ export const products = pgTable("products", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const adminCredentials = {
+  username: "admin",
+  password: "admin123" // This should be changed in production
+};
 
 export const categories = [
   "Tops",
@@ -50,14 +47,12 @@ export const insertProductSchema = createInsertSchema(products)
       .transform(tags => Array.from(new Set(tags)))
   });
 
-export const insertUserSchema = createInsertSchema(users)
-  .omit({ id: true, createdAt: true })
-  .extend({
-    password: z.string().min(6, "Password must be at least 6 characters long")
-  });
+export const loginSchema = z.object({
+  username: z.string(),
+  password: z.string()
+});
 
 export type Category = z.infer<typeof categorySchema>;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+export type LoginCredentials = z.infer<typeof loginSchema>;
