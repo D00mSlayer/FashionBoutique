@@ -22,9 +22,6 @@ const NavLinks = ({ className = "", onClick }: NavLinksProps) => (
     <Link href="/" onClick={onClick}>
       <span className="hover:text-primary cursor-pointer">Home</span>
     </Link>
-    <Link href="/new-collection" onClick={onClick}>
-      <span className="hover:text-primary cursor-pointer">New Collection</span>
-    </Link>
     <Link href="/contact" onClick={onClick}>
       <span className="hover:text-primary cursor-pointer">Contact</span>
     </Link>
