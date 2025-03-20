@@ -127,20 +127,26 @@ export function ProductList() {
             <CardContent className="p-4 flex items-center">
               {/* Product Image */}
               {product.images && product.images.length > 0 && (
-                <div className="w-24 h-24 mr-4 rounded-lg overflow-hidden flex-shrink-0">
-                  {product.images[0].startsWith('data:video') ? (
-                    <video
-                      src={product.images[0]}
-                      className="w-full h-full object-cover"
-                      controls
-                    />
-                  ) : (
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
+                <div className="flex-shrink-0 overflow-x-auto">
+                  <div className="flex gap-2 p-1">
+                    {product.images.map((image, idx) => (
+                      <div key={idx} className="w-24 h-24 flex-shrink-0">
+                        {image.startsWith('data:video') ? (
+                          <video
+                            src={image}
+                            className="w-full h-full object-cover rounded-lg"
+                            controls
+                          />
+                        ) : (
+                          <img
+                            src={image}
+                            alt={`${product.name} - Image ${idx + 1}`}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 

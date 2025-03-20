@@ -106,6 +106,7 @@ export async function registerRoutes(app: Express) {
         sizes: JSON.parse(req.body.sizes || "[]"),
         colors: JSON.parse(req.body.colors || "[]"),
         images: mediaUrls,
+        tags: JSON.parse(req.body.tags || "[]"),
         isNewCollection: req.body.isNewCollection === "true"
       };
 
