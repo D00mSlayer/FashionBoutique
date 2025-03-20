@@ -13,9 +13,11 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getAllProducts(): Promise<Product[]> {
     try {
+      console.log("Fetching all products from database at:", new Date().toISOString());
       const allProducts = await db.select().from(products)
         .orderBy(desc(products.createdAt));
-      console.log("Retrieved all products:", allProducts);
+      console.log("Retrieved products count:", allProducts.length);
+      console.log("Products data:", allProducts.map(p => ({ id: p.id, name: p.name, createdAt: p.createdAt })));
       return allProducts;
     } catch (error) {
       console.error("Error fetching all products:", error);
@@ -24,12 +26,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getNewCollection(): Promise<Product[]> {
+    console.log("Fetching new collection products at:", new Date().toISOString());
     return await db.select().from(products)
       .where(eq(products.isNewCollection, true))
       .orderBy(desc(products.createdAt));
   }
 
   async getProductsByCategory(category: string): Promise<Product[]> {
+    console.log("Fetching products by category:", category, "at:", new Date().toISOString());
     return await db.select().from(products)
       .where(eq(products.category, category))
       .orderBy(desc(products.createdAt));
@@ -37,12 +41,22 @@ export class DatabaseStorage implements IStorage {
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
     try {
-      console.log("Attempting to create product:", insertProduct);
+      console.log("Creating new product at:", new Date().toISOString());
+      console.log("Product data:", {
+        ...insertProduct,
+        images: insertProduct.images.length + " images"
+      });
+
       const [product] = await db
         .insert(products)
         .values(insertProduct)
         .returning();
-      console.log("Successfully created product:", product);
+
+      console.log("Successfully created product:", {
+        id: product.id,
+        name: product.name,
+        createdAt: product.createdAt
+      });
       return product;
     } catch (error) {
       console.error("Error creating product:", error);
@@ -51,7 +65,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteProduct(id: number): Promise<void> {
-    console.log(`Attempting to delete product with ID: ${id}`);
+    console.log(`Attempting to delete product with ID: ${id} at:`, new Date().toISOString());
     try {
       // First verify the product exists
       const existingProducts = await db
