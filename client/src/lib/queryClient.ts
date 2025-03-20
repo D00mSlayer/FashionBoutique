@@ -12,9 +12,20 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Add cache busting parameter for GET requests
+  const urlWithNoCaching = method === 'GET' 
+    ? `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`
+    : url;
+
+  const res = await fetch(urlWithNoCaching, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      // Add cache control headers
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -29,8 +40,17 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    // Add cache busting parameter
+    const url = queryKey[0] as string;
+    const urlWithNoCaching = `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+
+    const res = await fetch(urlWithNoCaching, {
       credentials: "include",
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
@@ -45,9 +65,10 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      refetchInterval: 0,
+      refetchOnWindowFocus: true,
+      staleTime: 0, // Consider all data stale immediately
+      gcTime: 0, // Disable garbage collection
       retry: false,
     },
     mutations: {
