@@ -1,0 +1,117 @@
+[
+    {
+        "id": 11,
+        "name": "bbhh",
+        "description": "ggbb",
+        "category": "Tops",
+        "sizes": [
+            "40"
+        ],
+        "colors": [
+            "Peach"
+        ],
+        "images": [],
+        "isNewCollection": false,
+        "createdAt": "2025-03-18T13:36:49.122Z"
+    },
+    {
+        "id": 10,
+        "name": "qwe",
+        "description": "ewqewq",
+        "category": "Tops",
+        "sizes": [
+            "Free Size",
+            "XS"
+        ],
+        "colors": [
+            "Beige"
+        ],
+        "images": [],
+        "isNewCollection": false,
+        "createdAt": "2025-03-18T09:59:28.604Z"
+    },
+    {
+        "id": 9,
+        "name": "Cfo",
+        "description": "Cfo",
+        "category": "Tops",
+        "sizes": [
+            "XL"
+        ],
+        "colors": [
+            "Red",
+            "Mustard"
+        ],
+        "images": [],
+        "isNewCollection": false,
+        "createdAt": "2025-03-17T19:12:20.518Z"
+    },
+    {
+        "id": 8,
+        "name": "Teri",
+        "description": "Ma ki",
+        "category": "Tops",
+        "sizes": [
+            "XXL",
+            "L"
+        ],
+        "colors": [
+            "Sage",
+            "Olive"
+        ],
+        "images": [],
+        "isNewCollection": false,
+        "createdAt": "2025-03-17T19:07:45.956Z"
+    },
+    {
+        "id": 7,
+        "name": "Qqwwee",
+        "description": "Gg\r\n\r\nDhduf\r\n\r\nXj",
+        "category": "Tops",
+        "sizes": [
+            "L",
+            "40"
+        ],
+        "colors": [
+            "Light Blue",
+            "Green",
+            "Cream",
+            "Orange"
+        ],
+        "images": [],
+        "isNewCollection": false,
+        "createdAt": "2025-03-17T19:05:51.172Z"
+    },
+    {
+        "id": 5,
+        "name": "Ll",
+        "description": "Bb",
+        "category": "Tops",
+        "sizes": [
+            "XL"
+        ],
+        "colors": [
+            "Sky Blue",
+            "Olive"
+        ],
+        "images": [],
+        "isNewCollection": false,
+        "createdAt": "2025-03-17T18:57:32.623Z"
+    },
+    {
+        "id": 4,
+        "name": "Cvv",
+        "description": "Vvv",
+        "category": "Tops",
+        "sizes": [
+            "32",
+            "30"
+        ],
+        "colors": [
+            "Turquoise"
+        ],
+        "images": [],
+        "isNewCollection": false,
+        "createdAt": "2025-03-17T14:44:22.927Z"
+    }
+]
