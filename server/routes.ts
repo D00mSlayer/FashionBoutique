@@ -20,8 +20,15 @@ export async function registerRoutes(app: Express) {
     const products = await storage.getAllProducts();
     console.log("Fetching all products:", products.map(p => ({
       ...p,
-      images: p.images.map(img => img.substring(0, 50) + '...')
+      images: `${p.images.length} images`
     })));
+
+    // Transform response to reduce initial payload size
+    const lightProducts = products.map(product => ({
+      ...product,
+      // Only send first image URL initially
+      images: [product.images[0]]
+    }));
 
     // Disable caching for this endpoint
     res.set({
@@ -30,7 +37,27 @@ export async function registerRoutes(app: Express) {
       'Expires': '0'
     });
 
-    res.json(products);
+    res.json(lightProducts);
+  });
+
+  // New endpoint for lazy loading remaining images
+  app.get("/api/products/:id/media", async (req, res) => {
+    const productId = parseInt(req.params.id);
+    if (isNaN(productId)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
+
+    const products = await storage.getAllProducts();
+    const product = products.find(p => p.id === productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Return all images except the first one which was already sent
+    res.json({
+      images: product.images.slice(1)
+    });
   });
 
   app.get("/api/products/new-collection", async (req, res) => {
@@ -50,7 +77,7 @@ export async function registerRoutes(app: Express) {
     const products = await storage.getProductsByCategory(req.params.category);
     console.log("Fetching products by category:", req.params.category, products.map(p => ({
       ...p,
-      images: p.images.map(img => img.substring(0, 50) + '...')
+      images: `${p.images.length} images`
     })));
 
     // Disable caching

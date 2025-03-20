@@ -5,6 +5,7 @@ import { openWhatsApp } from "@/lib/whatsapp";
 import type { Product } from "@shared/schema";
 import { useState, useRef, TouchEvent, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface ProductCardProps {
   product: Product;
@@ -17,6 +18,17 @@ export function ProductCard({ product }: ProductCardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const mediaRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Lazy load remaining images
+  const { data: additionalMedia } = useQuery({
+    queryKey: [`/api/products/${product.id}/media`],
+    enabled: mediaRef.current !== null, // Only fetch when component is mounted
+    staleTime: Infinity, // Cache the result indefinitely
+  });
+
+  const allMedia = additionalMedia 
+    ? [...product.images, ...additionalMedia.images]
+    : product.images;
 
   const isVideo = (url: string) => url.startsWith('data:video');
 
@@ -49,64 +61,17 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const nextMedia = () => {
     setCurrentMediaIndex((prev) =>
-      prev === product.images.length - 1 ? 0 : prev + 1
+      prev === allMedia.length - 1 ? 0 : prev + 1
     );
     setIsLoading(true);
   };
 
   const previousMedia = () => {
     setCurrentMediaIndex((prev) =>
-      prev === 0 ? product.images.length - 1 : prev - 1
+      prev === 0 ? allMedia.length - 1 : prev - 1
     );
     setIsLoading(true);
   };
-
-  // Initialize media loading
-  useEffect(() => {
-    if (!mediaRef.current || !product.images.length) return;
-
-    // Pre-load current and next media
-    const loadMedia = (index: number) => {
-      if (isVideo(product.images[index])) {
-        // Create video element for preloading
-        const videoElement = document.createElement('video');
-        videoElement.preload = "metadata";
-        videoElement.src = product.images[index];
-      } else {
-        const img = new Image();
-        img.src = product.images[index];
-      }
-    };
-
-    // Load current media immediately
-    loadMedia(currentMediaIndex);
-
-    // Pre-load next media
-    const nextIndex = (currentMediaIndex + 1) % product.images.length;
-    loadMedia(nextIndex);
-
-    // Set up intersection observer for lazy loading of other media
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          // Pre-load remaining media when card comes into view
-          product.images.forEach((_, index) => {
-            if (index !== currentMediaIndex && index !== nextIndex) {
-              loadMedia(index);
-            }
-          });
-          observerRef.current?.disconnect();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    observerRef.current.observe(mediaRef.current);
-
-    return () => {
-      observerRef.current?.disconnect();
-    };
-  }, [currentMediaIndex, product.images]);
 
   return (
     <Card className="overflow-hidden group">
@@ -120,12 +85,12 @@ export function ProductCard({ product }: ProductCardProps) {
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
           >
-            {product.images.length > 0 ? (
+            {allMedia.length > 0 ? (
               <>
-                {isVideo(product.images[currentMediaIndex]) ? (
+                {isVideo(allMedia[currentMediaIndex]) ? (
                   <video
                     key={currentMediaIndex}
-                    src={product.images[currentMediaIndex]}
+                    src={allMedia[currentMediaIndex]}
                     className={`object-cover w-full h-full transition-opacity duration-300 ${
                       isLoading ? 'opacity-0' : 'opacity-100'
                     }`}
@@ -138,7 +103,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 ) : (
                   <img
                     key={currentMediaIndex}
-                    src={product.images[currentMediaIndex]}
+                    src={allMedia[currentMediaIndex]}
                     alt={`${product.name} - Image ${currentMediaIndex + 1}`}
                     className={`object-cover w-full h-full transition-opacity duration-300 ${
                       isLoading ? 'opacity-0' : 'opacity-100'
@@ -154,7 +119,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 )}
 
                 {/* Navigation Arrows - Only visible on hover */}
-                {product.images.length > 1 && (
+                {allMedia.length > 1 && (
                   <>
                     <button
                       onClick={previousMedia}
@@ -173,7 +138,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
                     {/* Dots Indicator - Always visible */}
                     <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 bg-black/30 rounded-full px-2 py-1">
-                      {product.images.map((_, index) => (
+                      {allMedia.map((_, index) => (
                         <button
                           key={index}
                           onClick={() => setCurrentMediaIndex(index)}
@@ -222,6 +187,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
       </CardContent>
+
       <CardFooter className="p-4 pt-0">
         <Button
           className="w-full"
