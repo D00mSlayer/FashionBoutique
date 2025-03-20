@@ -63,6 +63,29 @@ export interface IStorage {
   sessionStore: session.Store;
 }
 
+// Function to get media data from the database
+async function getProductMediaFromDB(productId: number) {
+  try {
+    // Query the raw media value from database
+    const result = await db.execute(
+      sql`SELECT media FROM products WHERE id = ${productId}`
+    );
+
+    if (result && result.length > 0 && result[0].media) {
+      try {
+        return JSON.parse(result[0].media);
+      } catch (e) {
+        console.error("Error parsing media JSON from DB:", e);
+        return [];
+      }
+    }
+    return [];
+  } catch (error) {
+    console.error("Error getting media from DB:", error);
+    return [];
+  }
+}
+
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
@@ -97,13 +120,13 @@ export class DatabaseStorage implements IStorage {
 
       console.log("Retrieved products count:", items.length, "of total:", total);
       
-      // Debug media property
-      console.log("Fetching all products:", JSON.stringify(items, null, 2));
-      
-      // Check if media needs conversion from string to JSON
+      // Process the media data in products
       const processedItems = items.map(item => {
-        // If media is a string (serialized JSON), parse it
-        if (typeof item.media === 'string') {
+        if (typeof item.media === 'object') {
+          // Already properly formed
+          return item;
+        } else if (typeof item.media === 'string' && item.media.startsWith('[{')) {
+          // It's a JSON string, parse it
           try {
             return {
               ...item,
@@ -113,12 +136,28 @@ export class DatabaseStorage implements IStorage {
             console.error("Error parsing media JSON:", e);
             return item;
           }
+        } else if (typeof item.media === 'string' && item.media.includes('items')) {
+          // Get the actual media from DB
+          return getProductMediaFromDB(item.id)
+            .then(mediaData => {
+              return {
+                ...item,
+                media: mediaData
+              };
+            })
+            .catch(err => {
+              console.error(`Error getting media for product ${item.id}:`, err);
+              return item;
+            });
         }
         return item;
       });
       
+      // Handle potential promises in processedItems
+      const resolvedItems = await Promise.all(processedItems);
+      
       return {
-        items: processedItems,
+        items: resolvedItems,
         total,
         hasMore: offset + items.length < total
       };

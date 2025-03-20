@@ -29,11 +29,11 @@ export async function registerRoutes(app: Express) {
     // Transform response to reduce initial payload size
     const lightProducts = result.items.map(product => ({
       ...product,
-      // Only send thumbnails initially
-      media: product.media.map(item => ({
+      // Send both thumbnail and full URLs for immediate display
+      media: Array.isArray(product.media) ? product.media.map(item => ({
         thumbnail: item.thumbnail,
-        full: null // Don't send full version initially
-      }))
+        full: item.full // Send full version for image preview
+      })) : []
     }));
 
     res.set({
@@ -77,6 +77,16 @@ export async function registerRoutes(app: Express) {
     const result = await storage.getNewCollection(page, limit);
     console.log("Fetching new collection products");
 
+    // Transform response for consistency
+    const lightProducts = result.items.map(product => ({
+      ...product,
+      // Send both thumbnail and full URLs for immediate display
+      media: Array.isArray(product.media) ? product.media.map(item => ({
+        thumbnail: item.thumbnail,
+        full: item.full // Send full version for image preview
+      })) : []
+    }));
+
     res.set({
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       'Pragma': 'no-cache',
@@ -84,7 +94,7 @@ export async function registerRoutes(app: Express) {
     });
 
     res.json({
-      items: result.items,
+      items: lightProducts,
       total: result.total,
       hasMore: result.hasMore
     });
