@@ -84,7 +84,10 @@ export function ProductList() {
       }
     });
 
-  const isVideo = (url: string): boolean => url.startsWith('data:video');
+  const isVideo = (url: string): boolean => {
+    if (!url) return false;
+    return url.includes('data:video') || url.toLowerCase().endsWith('.mp4');
+  };
 
   if (isLoading) {
     return (
@@ -128,7 +131,7 @@ export function ProductList() {
           <Card key={product.id}>
             <CardContent className="p-4">
               <div className="flex flex-col md:flex-row gap-4">
-                {/* Product Image */}
+                {/* Product Media */}
                 {product.media && product.media.length > 0 && (
                   <div className="w-full md:w-auto">
                     <div className="overflow-x-auto">

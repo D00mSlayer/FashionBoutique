@@ -17,7 +17,10 @@ export function ProductCard({ product }: ProductCardProps) {
   const [isLoading, setIsLoading] = useState(true);
   const mediaRef = useRef<HTMLDivElement>(null);
 
-  const isVideo = (url: string) => url.startsWith('data:video');
+  const isVideo = (url: string): boolean => {
+    if (!url) return false;
+    return url.includes('data:video') || url.toLowerCase().endsWith('.mp4');
+  };
 
   // Minimum swipe distance for navigation (in pixels)
   const minSwipeDistance = 50;
@@ -76,10 +79,10 @@ export function ProductCard({ product }: ProductCardProps) {
           >
             {product.media.length > 0 ? (
               <>
-                {isVideo(currentMediaItem.full || currentMediaItem.thumbnail) ? (
+                {isVideo(currentMediaItem.thumbnail) ? (
                   <video
                     key={currentMediaIndex}
-                    src={currentMediaItem.full || currentMediaItem.thumbnail}
+                    src={currentMediaItem.thumbnail}
                     className={`object-cover w-full h-full transition-opacity duration-300 ${
                       isLoading ? 'opacity-0' : 'opacity-100'
                     }`}
@@ -92,7 +95,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 ) : (
                   <img
                     key={currentMediaIndex}
-                    src={currentMediaItem.full || currentMediaItem.thumbnail}
+                    src={currentMediaItem.thumbnail}
                     alt={`${product.name} - Image ${currentMediaIndex + 1}`}
                     className={`object-cover w-full h-full transition-opacity duration-300 ${
                       isLoading ? 'opacity-0' : 'opacity-100'
