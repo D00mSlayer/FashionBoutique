@@ -83,7 +83,7 @@ export function ProductFilters({
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full sm:w-[200px] p-0">
+          <PopoverContent className="w-full sm:w-[200px] p-0" align="start" side="bottom">
             <ScrollArea className="h-[200px]">
               <div className="space-y-1 p-1">
                 <Button
@@ -139,7 +139,7 @@ export function ProductFilters({
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full sm:w-[200px] p-0">
+          <PopoverContent className="w-full sm:w-[200px] p-0" align="start" side="bottom">
             <ScrollArea className="h-[200px]">
               <div className="space-y-1 p-1">
                 {availableSizes.map((size) => (
@@ -179,7 +179,7 @@ export function ProductFilters({
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full sm:w-[200px] p-0">
+          <PopoverContent className="w-full sm:w-[200px] p-0" align="start" side="bottom">
             <ScrollArea className="h-[200px]">
               <div className="space-y-1 p-1">
                 {availableColors.map((color) => (

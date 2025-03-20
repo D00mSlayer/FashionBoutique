@@ -100,7 +100,7 @@ export function ProductCard({ product }: ProductCardProps) {
                       <div className="absolute inset-0 bg-muted animate-pulse" />
                     )}
                     <img
-                      src={currentMediaItem.thumbnail}
+                      src={currentMediaItem.full} 
                       alt={`${product.name} preview`}
                       className={`w-full h-full object-cover transition-opacity duration-300 ${
                         isLoading ? 'opacity-0' : 'opacity-100'
