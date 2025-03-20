@@ -12,7 +12,6 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-  const [imageError, setImageError] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,11 +19,6 @@ export function ProductCard({ product }: ProductCardProps) {
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   const isVideo = (url: string) => url.startsWith('data:video');
-
-  const handleImageError = () => {
-    console.error("Failed to load image for product:", product.name);
-    setImageError(true);
-  };
 
   // Minimum swipe distance for navigation (in pixels)
   const minSwipeDistance = 50;
@@ -67,23 +61,40 @@ export function ProductCard({ product }: ProductCardProps) {
     setIsLoading(true);
   };
 
-  // Preload first media immediately and set up lazy loading for others
+  // Initialize media loading
   useEffect(() => {
     if (!mediaRef.current || !product.images.length) return;
 
-    // Start loading first media immediately
-    if (currentMediaIndex === 0) {
-      setIsLoading(true);
-    }
+    // Pre-load current and next media
+    const loadMedia = (index: number) => {
+      if (isVideo(product.images[index])) {
+        const video = new Video();
+        video.src = product.images[index];
+        video.preload = "metadata";
+      } else {
+        const img = new Image();
+        img.src = product.images[index];
+      }
+    };
 
-    // Set up intersection observer for subsequent media
+    // Load current media immediately
+    loadMedia(currentMediaIndex);
+
+    // Pre-load next media
+    const nextIndex = (currentMediaIndex + 1) % product.images.length;
+    loadMedia(nextIndex);
+
+    // Set up intersection observer for lazy loading of other media
     observerRef.current = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          // Preload next media item
-          const nextIndex = (currentMediaIndex + 1) % product.images.length;
-          const preloadMedia = new Image();
-          preloadMedia.src = product.images[nextIndex];
+          // Pre-load remaining media when card comes into view
+          product.images.forEach((_, index) => {
+            if (index !== currentMediaIndex && index !== nextIndex) {
+              loadMedia(index);
+            }
+          });
+          observerRef.current?.disconnect();
         }
       },
       { threshold: 0.1 }
@@ -121,7 +132,6 @@ export function ProductCard({ product }: ProductCardProps) {
                     muted
                     playsInline
                     onLoadedData={() => setIsLoading(false)}
-                    onError={() => handleImageError()}
                     preload="metadata"
                   />
                 ) : (
@@ -133,7 +143,6 @@ export function ProductCard({ product }: ProductCardProps) {
                       isLoading ? 'opacity-0' : 'opacity-100'
                     }`}
                     onLoad={() => setIsLoading(false)}
-                    onError={() => handleImageError()}
                     loading={currentMediaIndex === 0 ? "eager" : "lazy"}
                   />
                 )}
