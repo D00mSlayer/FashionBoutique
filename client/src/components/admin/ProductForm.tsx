@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from "lucide-react";
 
 const availableSizes = [
@@ -38,6 +38,8 @@ const availableColors = [
 export function ProductForm() {
   const { toast } = useToast();
   const [previews, setPreviews] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
 
   const form = useForm<InsertProduct>({
     resolver: zodResolver(insertProductSchema),
@@ -48,9 +50,46 @@ export function ProductForm() {
       sizes: [],
       colors: [],
       images: [],
+      tags: [],
       isNewCollection: false
     }
   });
+
+  // Add category as a tag when category changes
+  useEffect(() => {
+    const category = form.watch("category");
+    const currentTags = form.getValues("tags");
+
+    // Remove any existing category tags (they end with '-category')
+    const filteredTags = currentTags.filter(tag => !tag.endsWith('-category'));
+
+    // Add the new category as a tag
+    const newTags = [...filteredTags, `${category.toLowerCase()}-category`];
+    form.setValue("tags", newTags);
+    setTags(newTags);
+  }, [form.watch("category")]);
+
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault();
+      const newTag = tagInput.trim().toLowerCase();
+      if (!tags.includes(newTag)) {
+        const newTags = [...tags, newTag];
+        setTags(newTags);
+        form.setValue("tags", newTags);
+      }
+      setTagInput("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    // Don't remove category tags
+    if (tagToRemove.endsWith('-category')) return;
+
+    const newTags = tags.filter(tag => tag !== tagToRemove);
+    setTags(newTags);
+    form.setValue("tags", newTags);
+  };
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (values: InsertProduct) => {
@@ -66,21 +105,15 @@ export function ProductForm() {
       // Add arrays as JSON strings
       formData.append("sizes", JSON.stringify(values.sizes));
       formData.append("colors", JSON.stringify(values.colors));
+      formData.append("tags", JSON.stringify(values.tags));
 
       // Add media files
       if (Array.isArray(values.images)) {
-        console.log("Processing images:", values.images.length, "files");
         values.images.forEach((file) => {
           if (file instanceof File) {
-            console.log("Appending file:", file.name, file.type);
             formData.append("media", file);
           }
         });
-      }
-
-      // Log the FormData entries for debugging
-      for (const pair of formData.entries()) {
-        console.log('FormData entry:', pair[0], pair[1] instanceof File ? 'File: ' + pair[1].name : pair[1]);
       }
 
       const res = await fetch("/api/products", {
@@ -102,10 +135,10 @@ export function ProductForm() {
         description: "Product added successfully"
       });
       setPreviews([]);
+      setTags([]);
       form.reset();
     },
     onError: (error: Error) => {
-      console.error("Form submission error:", error);
       toast({
         title: "Error",
         description: error.message,
@@ -119,7 +152,6 @@ export function ProductForm() {
     if (!files?.length) return;
 
     const fileArray = Array.from(files);
-    console.log("Selected files:", fileArray.map(f => ({ name: f.name, type: f.type })));
     form.setValue("images", fileArray);
 
     // Generate previews
@@ -198,6 +230,44 @@ export function ProductForm() {
             </FormItem>
           )}
         />
+
+        <FormItem>
+          <FormLabel>Tags</FormLabel>
+          <FormControl>
+            <div className="space-y-2">
+              <Input
+                placeholder="Add tags (press Enter)"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleAddTag}
+              />
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className={`px-2 py-1 rounded-full text-sm flex items-center gap-1 ${
+                      tag.endsWith('-category')
+                        ? 'bg-primary/20 text-primary'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    {tag}
+                    {!tag.endsWith('-category') && (
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
 
         <FormField
           control={form.control}
