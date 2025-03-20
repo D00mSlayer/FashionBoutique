@@ -11,5 +11,21 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+// Create a new pool with explicit SSL settings
+export const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: true
+});
+
+// Create drizzle instance with schema
+export const db = drizzle(pool, { schema });
+
+// Log connection status
+pool.on('connect', () => {
+  console.log('Connected to PostgreSQL database');
+});
+
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
