@@ -20,6 +20,12 @@ import { queryClient } from "@/lib/queryClient";
 import { ProductListControls } from "./ProductListControls";
 import { useState } from "react";
 
+interface ProductResponse {
+  items: Product[];
+  total: number;
+  hasMore: boolean;
+}
+
 type SortOption = "date-desc" | "date-asc" | "name-asc" | "name-desc";
 
 export function ProductList() {
@@ -28,7 +34,7 @@ export function ProductList() {
   const [category, setCategory] = useState<string | "all">("all");
   const [showNewCollectionOnly, setShowNewCollectionOnly] = useState(false);
 
-  const { data: products = [], isLoading } = useQuery<Product[]>({
+  const { data, isLoading } = useQuery<ProductResponse>({
     queryKey: ["/api/products"],
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Disable garbage collection
@@ -63,7 +69,7 @@ export function ProductList() {
     }
   });
 
-  const filteredAndSortedProducts = [...products]
+  const filteredAndSortedProducts = [...(data?.items || [])]
     .filter(product => {
       if (category !== "all" && product.category !== category) return false;
       if (showNewCollectionOnly && !product.isNewCollection) return false;
