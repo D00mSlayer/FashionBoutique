@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, RotateCcw } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -42,9 +42,18 @@ export function ProductFilters({
   const [openSizes, setOpenSizes] = useState(false);
   const [openColors, setOpenColors] = useState(false);
 
+  const hasActiveFilters = selectedCategory || selectedSizes.length > 0 || selectedColors.length > 0 || showNewOnly;
+
+  const handleReset = () => {
+    onSelectCategory(null);
+    selectedSizes.forEach(size => onSelectSize(size));
+    selectedColors.forEach(color => onSelectColor(color));
+    if (showNewOnly) onToggleNewOnly(false);
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         {/* Category Filter */}
         <Popover open={openCategory} onOpenChange={setOpenCategory}>
           <PopoverTrigger asChild>
@@ -103,7 +112,10 @@ export function ProductFilters({
               variant="outline"
               role="combobox"
               aria-expanded={openSizes}
-              className="w-[200px] justify-between"
+              className={cn(
+                "w-[200px] justify-between",
+                selectedSizes.length > 0 && "border-primary"
+              )}
             >
               {selectedSizes.length
                 ? `${selectedSizes.length} sizes selected`
@@ -140,7 +152,10 @@ export function ProductFilters({
               variant="outline"
               role="combobox"
               aria-expanded={openColors}
-              className="w-[200px] justify-between"
+              className={cn(
+                "w-[200px] justify-between",
+                selectedColors.length > 0 && "border-primary"
+              )}
             >
               {selectedColors.length
                 ? `${selectedColors.length} colors selected`
@@ -169,6 +184,18 @@ export function ProductFilters({
             </ScrollArea>
           </PopoverContent>
         </Popover>
+
+        {/* Reset Filters Button */}
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleReset}
+            className="animate-in fade-in"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* New Collection Toggle */}

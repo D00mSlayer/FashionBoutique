@@ -1,6 +1,10 @@
 import { products, type Product, type InsertProduct } from "@shared/schema";
 import { db, checkDatabaseConnection } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
+import connectPg from "connect-pg-simple";
+import session from "express-session";
+
+const PostgresSessionStore = connectPg(session);
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
@@ -34,15 +38,43 @@ export interface PagedResult<T> {
   hasMore: boolean;
 }
 
+//Assuming User and InsertUser types are defined elsewhere, likely in @shared/schema
+export interface User {
+  id: number;
+  username: string;
+  // ... other user properties
+}
+
+export interface InsertUser {
+  username: string;
+  // ... other user properties for insertion
+}
+
+
 export interface IStorage {
   getAllProducts(page?: number, limit?: number): Promise<PagedResult<Product>>;
   getNewCollection(page?: number, limit?: number): Promise<PagedResult<Product>>;
   getProductsByCategory(category: string, page?: number, limit?: number): Promise<PagedResult<Product>>;
   createProduct(product: InsertProduct): Promise<Product>;
   deleteProduct(id: number): Promise<void>;
+  getUserByUsername(username: string): Promise<User | null>;
+  getUser(id: number): Promise<User | null>;
+  createUser(user: InsertUser): Promise<User>;
+  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
+
+  constructor() {
+    this.sessionStore = new PostgresSessionStore({
+      conObject: {
+        connectionString: process.env.DATABASE_URL,
+      },
+      createTableIfMissing: true,
+    });
+  }
+
   private async getCount(query = products): Promise<number> {
     const result = await db.select({
       count: sql<number>`count(*)`
@@ -153,6 +185,31 @@ export class DatabaseStorage implements IStorage {
 
       console.log(`Successfully deleted product ${id}`);
     });
+  }
+
+  // User-related methods
+  async getUserByUsername(username: string): Promise<User | null> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username));
+    return user || null;
+  }
+
+  async getUser(id: number): Promise<User | null> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id));
+    return user || null;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
   }
 }
 
