@@ -68,9 +68,10 @@ export function ProductCard({ product }: ProductCardProps) {
     // Pre-load current and next media
     const loadMedia = (index: number) => {
       if (isVideo(product.images[index])) {
-        const video = new Video();
-        video.src = product.images[index];
-        video.preload = "metadata";
+        // Create video element for preloading
+        const videoElement = document.createElement('video');
+        videoElement.preload = "metadata";
+        videoElement.src = product.images[index];
       } else {
         const img = new Image();
         img.src = product.images[index];
