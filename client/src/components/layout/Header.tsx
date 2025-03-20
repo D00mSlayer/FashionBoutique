@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const Logo = () => (
-  <svg width="120" height="40" viewBox="0 0 120 40">
-    <text x="10" y="30" fill="currentColor" fontSize="24" fontWeight="bold">
-      Viba Chic
-    </text>
-  </svg>
+  <img 
+    src="/assets/brand-logo.png" 
+    alt="Viba Chic" 
+    className="h-12 md:h-14 object-contain"
+    width="auto"
+    height="auto"
+  />
 );
 
 interface NavLinksProps {
@@ -34,13 +36,17 @@ export function Header() {
   const handleClose = () => setIsOpen(false);
 
   return (
-    <header className="border-b">
-      <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+    <header className="border-b py-3">
+      <div className="container mx-auto px-4 flex items-center justify-between">
         <Link href="/">
-          <span className="flex flex-col items-start cursor-pointer">
-            <Logo />
-            <span className="text-sm text-muted-foreground ml-2 -mt-1">Women's Korean & Western Wear</span>
-          </span>
+          <div className="flex flex-col items-center md:items-start cursor-pointer">
+            <div className="flex items-center justify-center">
+              <Logo />
+            </div>
+            <span className="text-sm font-medium tracking-wide text-muted-foreground mt-1">
+              Women's Korean & Western Wear
+            </span>
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
