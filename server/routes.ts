@@ -81,9 +81,14 @@ export async function registerRoutes(app: Express) {
         for (const file of files) {
           try {
             if (isVideo(file.mimetype)) {
-              const videoUrl = await compressVideo(file.buffer);
-              mediaUrls.push(videoUrl);
-              console.log("Processed video, size:", Math.round(videoUrl.length / 1024), "KB");
+              try {
+                const base64Video = file.buffer.toString('base64');
+                const videoUrl = `data:${file.mimetype};base64,${base64Video}`;
+                mediaUrls.push(videoUrl);
+                console.log("Processed video, size:", Math.round(videoUrl.length / 1024), "KB");
+              } catch (error) {
+                console.error("Error processing video file:", error);
+              }
             } else if (isImage(file.mimetype)) {
               const compressedBuffer = await compressImage(file.buffer);
               const base64Url = `data:${file.mimetype};base64,${compressedBuffer.toString("base64")}`;
