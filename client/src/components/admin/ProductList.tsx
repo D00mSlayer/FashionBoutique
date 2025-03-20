@@ -31,7 +31,8 @@ export function ProductList() {
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
     staleTime: 0, // Always fetch fresh data
-    cacheTime: 0, // Disable caching completely
+    gcTime: 0, // Disable garbage collection
+    refetchInterval: 0, // Don't automatically refetch
     refetchOnMount: true, // Refetch when component mounts
     refetchOnWindowFocus: true, // Refetch when window gains focus
   });
@@ -62,7 +63,7 @@ export function ProductList() {
     }
   });
 
-  const filteredAndSortedProducts = products
+  const filteredAndSortedProducts = [...products]
     .filter(product => {
       if (category !== "all" && product.category !== category) return false;
       if (showNewCollectionOnly && !product.isNewCollection) return false;

@@ -11,10 +11,12 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Create a new pool with explicit SSL settings
+// Create a new pool with explicit SSL settings and a limited number of connections
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  ssl: true
+  ssl: true,
+  max: 1, // Limit to single connection to prevent connection pooling issues
+  idleTimeoutMillis: 0 // Close idle connections immediately
 });
 
 // Create drizzle instance with schema
@@ -28,4 +30,10 @@ pool.on('connect', () => {
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
   process.exit(-1);
+});
+
+// Ensure clean shutdown
+process.on('SIGTERM', () => {
+  console.log('Closing all database connections...');
+  pool.end();
 });
