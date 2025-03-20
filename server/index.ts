@@ -10,6 +10,16 @@ app.use(express.urlencoded({ extended: false }));
 // Initialize authentication first
 setupAuth(app);
 
+// Force HTTPS in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
+      return res.redirect(`https://${req.headers.host}${req.url}`);
+    }
+    next();
+  });
+}
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
