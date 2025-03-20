@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { ProductGrid } from "@/components/products/ProductGrid";
-import { CategoryFilter } from "@/components/products/CategoryFilter";
-import { TagFilter } from "@/components/products/TagFilter";
+import { ProductFilters } from "@/components/products/ProductFilters";
+import { categories } from "@shared/schema";
 import type { Product } from "@shared/schema";
 
 interface ProductResponse {
@@ -13,7 +13,9 @@ interface ProductResponse {
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [showNewOnly, setShowNewOnly] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const fetchProducts = async ({ pageParam = 1 }) => {
@@ -64,33 +66,55 @@ export default function Home() {
     return data?.pages.flatMap(page => page.items) ?? [];
   }, [data]);
 
-  // Get unique tags from all products
-  const availableTags = useMemo(() => {
-    const tags = new Set<string>();
+  // Get unique sizes and colors from all products
+  const { availableSizes, availableColors } = useMemo(() => {
+    const sizes = new Set<string>();
+    const colors = new Set<string>();
     allProducts.forEach(product => {
-      product.tags.forEach(tag => {
-        // Don't include category tags in the filter
-        if (!tag.endsWith('-category')) {
-          tags.add(tag);
-        }
-      });
+      product.sizes.forEach(size => sizes.add(size));
+      product.colors.forEach(color => colors.add(color));
     });
-    return Array.from(tags);
+    return {
+      availableSizes: Array.from(sizes).sort(),
+      availableColors: Array.from(colors).sort()
+    };
   }, [allProducts]);
 
-  // Filter products by selected tags
+  // Filter products by selected criteria
   const filteredProducts = useMemo(() => {
-    if (selectedTags.length === 0) return allProducts;
-    return allProducts.filter(product =>
-      selectedTags.every(tag => product.tags.includes(tag))
-    );
-  }, [allProducts, selectedTags]);
+    return allProducts.filter(product => {
+      // Filter by size
+      if (selectedSizes.length > 0 && !selectedSizes.some(size => product.sizes.includes(size))) {
+        return false;
+      }
 
-  const handleTagSelect = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag)
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
+      // Filter by color
+      if (selectedColors.length > 0 && !selectedColors.some(color => product.colors.includes(color))) {
+        return false;
+      }
+
+      // Filter by new collection
+      if (showNewOnly && !product.isNewCollection) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [allProducts, selectedSizes, selectedColors, showNewOnly]);
+
+  const handleSizeSelect = (size: string) => {
+    setSelectedSizes(prev => 
+      prev.includes(size)
+        ? prev.filter(s => s !== size)
+        : [...prev, size]
+    );
+  };
+
+  const handleColorSelect = (color: string) => {
+    setSelectedColors(prev => 
+      prev.includes(color)
+        ? prev.filter(c => c !== color)
+        : [...prev, color]
     );
   };
 
@@ -104,17 +128,19 @@ export default function Home() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <CategoryFilter
+      <ProductFilters
+        categories={categories}
+        sizes={availableSizes}
+        colors={availableColors}
         selectedCategory={selectedCategory}
+        selectedSizes={selectedSizes}
+        selectedColors={selectedColors}
+        showNewOnly={showNewOnly}
         onSelectCategory={setSelectedCategory}
+        onSelectSize={handleSizeSelect}
+        onSelectColor={handleColorSelect}
+        onToggleNewOnly={setShowNewOnly}
       />
-      {availableTags.length > 0 && (
-        <TagFilter
-          tags={availableTags}
-          selectedTags={selectedTags}
-          onSelectTag={handleTagSelect}
-        />
-      )}
       <div className="mt-8">
         <ProductGrid 
           products={filteredProducts} 
