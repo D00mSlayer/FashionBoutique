@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -84,6 +84,8 @@ export function ProductList() {
       }
     });
 
+  const isVideo = (url: string): boolean => url.startsWith('data:video');
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -127,21 +129,23 @@ export function ProductList() {
             <CardContent className="p-4">
               <div className="flex flex-col md:flex-row gap-4">
                 {/* Product Image */}
-                {product.images && product.images.length > 0 && (
+                {product.media && product.media.length > 0 && (
                   <div className="w-full md:w-auto">
                     <div className="overflow-x-auto">
                       <div className="flex gap-2 pb-2">
-                        {product.images.map((image, idx) => (
+                        {product.media.map((item, idx) => (
                           <div key={idx} className="w-24 h-24 flex-shrink-0">
-                            {image.startsWith('data:video') ? (
+                            {isVideo(item.thumbnail) ? (
                               <video
-                                src={image}
+                                src={item.thumbnail}
                                 className="w-full h-full object-cover rounded-lg"
                                 controls
+                                muted
+                                playsInline
                               />
                             ) : (
                               <img
-                                src={image}
+                                src={item.thumbnail}
                                 alt={`${product.name} - Image ${idx + 1}`}
                                 className="w-full h-full object-cover rounded-lg"
                               />
@@ -179,9 +183,9 @@ export function ProductList() {
                 <div className="flex-shrink-0">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="destructive" 
-                        size="icon" 
+                      <Button
+                        variant="destructive"
+                        size="icon"
                         disabled={isDeleting}
                       >
                         <Trash2 className="h-4 w-4" />
