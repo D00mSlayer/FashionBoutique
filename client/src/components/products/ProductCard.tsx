@@ -60,6 +60,8 @@ export function ProductCard({ product }: ProductCardProps) {
     setIsLoading(true);
   };
 
+  const currentMediaItem = product.media[currentMediaIndex];
+
   return (
     <Card className="overflow-hidden group">
       <CardContent className="p-0">
@@ -74,10 +76,10 @@ export function ProductCard({ product }: ProductCardProps) {
           >
             {product.media.length > 0 ? (
               <>
-                {isVideo(product.media[currentMediaIndex].thumbnail) ? (
+                {isVideo(currentMediaItem.full || currentMediaItem.thumbnail) ? (
                   <video
                     key={currentMediaIndex}
-                    src={product.media[currentMediaIndex].thumbnail}
+                    src={currentMediaItem.full || currentMediaItem.thumbnail}
                     className={`object-cover w-full h-full transition-opacity duration-300 ${
                       isLoading ? 'opacity-0' : 'opacity-100'
                     }`}
@@ -90,7 +92,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 ) : (
                   <img
                     key={currentMediaIndex}
-                    src={product.media[currentMediaIndex].thumbnail}
+                    src={currentMediaItem.full || currentMediaItem.thumbnail}
                     alt={`${product.name} - Image ${currentMediaIndex + 1}`}
                     className={`object-cover w-full h-full transition-opacity duration-300 ${
                       isLoading ? 'opacity-0' : 'opacity-100'
@@ -105,7 +107,7 @@ export function ProductCard({ product }: ProductCardProps) {
                   <div className="absolute inset-0 bg-muted animate-pulse" />
                 )}
 
-                {/* Navigation Arrows - Only visible on hover */}
+                {/* Navigation Arrows */}
                 {product.media.length > 1 && (
                   <>
                     <button
@@ -156,7 +158,7 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {/* Product Details - Show Immediately */}
+        {/* Product Details */}
         <div className="p-4">
           <h3 className="font-semibold">{product.name}</h3>
           <p className="text-sm text-muted-foreground mt-1">
