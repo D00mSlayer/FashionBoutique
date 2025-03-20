@@ -20,7 +20,11 @@ export default function Home() {
         onSelectCategory={setSelectedCategory}
       />
       <div className="mt-8">
-        <ProductGrid products={products || []} isLoading={isLoading} />
+        <ProductGrid 
+          products={products || []} 
+          isLoading={isLoading}
+          category={selectedCategory} 
+        />
       </div>
     </div>
   );

@@ -9,11 +9,12 @@ interface CategoryFilterProps {
 
 export function CategoryFilter({ selectedCategory, onSelectCategory }: CategoryFilterProps) {
   return (
-    <ScrollArea className="w-full whitespace-nowrap">
-      <div className="flex space-x-2 p-1">
+    <ScrollArea className="w-full whitespace-nowrap rounded-md border">
+      <div className="flex space-x-2 p-4">
         <Button
           variant={selectedCategory === null ? "default" : "outline"}
           onClick={() => onSelectCategory(null)}
+          className="shrink-0"
         >
           All
         </Button>
@@ -22,12 +23,13 @@ export function CategoryFilter({ selectedCategory, onSelectCategory }: CategoryF
             key={category}
             variant={selectedCategory === category ? "default" : "outline"}
             onClick={() => onSelectCategory(category)}
+            className="shrink-0"
           >
             {category}
           </Button>
         ))}
       </div>
-      <ScrollBar orientation="horizontal" />
+      <ScrollBar orientation="horizontal" className="h-2.5" />
     </ScrollArea>
   );
 }
