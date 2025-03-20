@@ -91,8 +91,8 @@ export function ProductFilters({
                   </Button>
                 ))}
               </div>
+              <ScrollBar orientation="vertical" />
             </ScrollArea>
-            <ScrollBar orientation="vertical" />
           </PopoverContent>
         </Popover>
 
@@ -128,8 +128,8 @@ export function ProductFilters({
                   </Button>
                 ))}
               </div>
+              <ScrollBar orientation="vertical" />
             </ScrollArea>
-            <ScrollBar orientation="vertical" />
           </PopoverContent>
         </Popover>
 
@@ -165,8 +165,8 @@ export function ProductFilters({
                   </Button>
                 ))}
               </div>
+              <ScrollBar orientation="vertical" />
             </ScrollArea>
-            <ScrollBar orientation="vertical" />
           </PopoverContent>
         </Popover>
       </div>
