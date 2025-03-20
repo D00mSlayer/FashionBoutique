@@ -124,75 +124,89 @@ export function ProductList() {
       <div className="grid gap-4">
         {filteredAndSortedProducts.map((product) => (
           <Card key={product.id}>
-            <CardContent className="p-4 flex items-center">
-              {/* Product Image */}
-              {product.images && product.images.length > 0 && (
-                <div className="flex-shrink-0 overflow-x-auto">
-                  <div className="flex gap-2 p-1">
-                    {product.images.map((image, idx) => (
-                      <div key={idx} className="w-24 h-24 flex-shrink-0">
-                        {image.startsWith('data:video') ? (
-                          <video
-                            src={image}
-                            className="w-full h-full object-cover rounded-lg"
-                            controls
-                          />
-                        ) : (
-                          <img
-                            src={image}
-                            alt={`${product.name} - Image ${idx + 1}`}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                        )}
+            <CardContent className="p-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                {/* Product Image */}
+                {product.images && product.images.length > 0 && (
+                  <div className="w-full md:w-auto">
+                    <div className="overflow-x-auto">
+                      <div className="flex gap-2 pb-2">
+                        {product.images.map((image, idx) => (
+                          <div key={idx} className="w-24 h-24 flex-shrink-0">
+                            {image.startsWith('data:video') ? (
+                              <video
+                                src={image}
+                                className="w-full h-full object-cover rounded-lg"
+                                controls
+                              />
+                            ) : (
+                              <img
+                                src={image}
+                                alt={`${product.name} - Image ${idx + 1}`}
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                            )}
+                          </div>
+                        ))}
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Product Info */}
+                <div className="flex-grow space-y-2">
+                  <h3 className="font-medium">{product.name}</h3>
+                  <p className="text-sm text-muted-foreground">{product.category}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {product.sizes.map((size) => (
+                      <span key={size} className="text-xs bg-muted px-2 py-1 rounded">
+                        {size}
+                      </span>
                     ))}
                   </div>
+                  {product.tags && product.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {product.tags.map((tag) => (
+                        <span key={tag} className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {/* Product Info */}
-              <div className="flex-grow">
-                <h3 className="font-medium">{product.name}</h3>
-                <p className="text-sm text-muted-foreground">{product.category}</p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {product.sizes.map((size) => (
-                    <span key={size} className="text-xs bg-muted px-2 py-1 rounded">
-                      {size}
-                    </span>
-                  ))}
+                {/* Delete Button */}
+                <div className="flex-shrink-0">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="destructive" 
+                        size="icon" 
+                        disabled={isDeleting}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{product.name}"? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteProduct(product.id)}
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
-
-              {/* Delete Button */}
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button 
-                    variant="destructive" 
-                    size="icon" 
-                    className="ml-4"
-                    disabled={isDeleting}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Product</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete "{product.name}"? This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => deleteProduct(product.id)}
-                      disabled={isDeleting}
-                    >
-                      {isDeleting ? "Deleting..." : "Delete"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
             </CardContent>
           </Card>
         ))}
