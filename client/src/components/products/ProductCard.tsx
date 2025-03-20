@@ -3,7 +3,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { openWhatsApp } from "@/lib/whatsapp";
 import type { Product } from "@shared/schema";
-import { useState, useRef, TouchEvent } from "react";
+import { useState, useRef, TouchEvent, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ProductCardProps {
@@ -15,7 +15,9 @@ export function ProductCard({ product }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const mediaRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   const isVideo = (url: string) => url.startsWith('data:video');
 
@@ -55,13 +57,38 @@ export function ProductCard({ product }: ProductCardProps) {
     setCurrentMediaIndex((prev) =>
       prev === product.images.length - 1 ? 0 : prev + 1
     );
+    setIsLoading(true);
   };
 
   const previousMedia = () => {
     setCurrentMediaIndex((prev) =>
       prev === 0 ? product.images.length - 1 : prev - 1
     );
+    setIsLoading(true);
   };
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    if (!mediaRef.current) return;
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          // Start loading the media when it comes into view
+          setIsLoading(true);
+          // Disconnect observer after first intersection
+          observerRef.current?.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observerRef.current.observe(mediaRef.current);
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, []);
 
   return (
     <Card className="overflow-hidden group">
@@ -81,20 +108,33 @@ export function ProductCard({ product }: ProductCardProps) {
                   <video
                     key={currentMediaIndex}
                     src={product.images[currentMediaIndex]}
-                    className="object-cover w-full h-full"
+                    className={`object-cover w-full h-full transition-opacity duration-300 ${
+                      isLoading ? 'opacity-0' : 'opacity-100'
+                    }`}
                     controls
                     muted
                     playsInline
+                    onLoadedData={() => setIsLoading(false)}
                     onError={() => handleImageError()}
+                    preload="metadata"
                   />
                 ) : (
                   <img
                     key={currentMediaIndex}
                     src={product.images[currentMediaIndex]}
                     alt={`${product.name} - Image ${currentMediaIndex + 1}`}
-                    className="object-cover w-full h-full"
+                    className={`object-cover w-full h-full transition-opacity duration-300 ${
+                      isLoading ? 'opacity-0' : 'opacity-100'
+                    }`}
+                    onLoad={() => setIsLoading(false)}
                     onError={() => handleImageError()}
+                    loading="lazy"
                   />
+                )}
+
+                {/* Loading Skeleton */}
+                {isLoading && (
+                  <div className="absolute inset-0 bg-muted animate-pulse" />
                 )}
 
                 {/* Navigation Arrows - Only visible on hover */}
