@@ -143,10 +143,10 @@ export default function ProductList() {
                     <div className="overflow-x-auto">
                       <div className="flex gap-2 pb-2">
                         {product.media.map((item, idx) => (
-                          <div key={idx} className="w-24 h-24 flex-shrink-0">
-                            {isVideo(item.thumbnail) ? (
+                          <div key={idx} className="w-32 h-32 flex-shrink-0">
+                            {isVideo(item.full) ? (
                               <video
-                                src={item.thumbnail}
+                                src={item.full}
                                 className="w-full h-full object-cover rounded-lg"
                                 controls
                                 muted
@@ -154,9 +154,10 @@ export default function ProductList() {
                               />
                             ) : (
                               <img
-                                src={item.thumbnail}
+                                src={item.full}
                                 alt={`${product.name} - Image ${idx + 1}`}
                                 className="w-full h-full object-cover rounded-lg"
+                                loading="lazy"
                               />
                             )}
                           </div>

@@ -11,6 +11,24 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
+// Default values from schema
+const availableSizes = [
+  "Free Size",
+  "XS", "S", "M", "L", "XL", "XXL",
+  "26", "28", "30", "32", "34", "36", "38", "40"
+] as const;
+
+const availableColors = [
+  "Black", "White", "Grey", "Navy Blue",
+  "Red", "Maroon", "Pink", "Light Pink", "Peach",
+  "Orange", "Rust", "Brown", "Beige", "Cream",
+  "Blue", "Light Blue", "Sky Blue", "Turquoise",
+  "Green", "Olive", "Mint", "Sage",
+  "Purple", "Lavender", "Wine",
+  "Yellow", "Mustard", "Gold",
+  "Floral", "Striped", "Checked", "Polka Dots"
+] as const;
+
 interface ProductFiltersProps {
   categories: string[];
   sizes: string[];
@@ -27,8 +45,6 @@ interface ProductFiltersProps {
 
 export function ProductFilters({
   categories,
-  sizes,
-  colors,
   selectedCategory,
   selectedSizes,
   selectedColors,
@@ -61,13 +77,13 @@ export function ProductFilters({
               variant="outline"
               role="combobox"
               aria-expanded={openCategory}
-              className="w-[200px] justify-between"
+              className="w-full sm:w-[200px] justify-between text-left"
             >
               {selectedCategory || "All Categories"}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0">
+          <PopoverContent className="w-full sm:w-[200px] p-0">
             <ScrollArea className="h-[200px]">
               <div className="space-y-1 p-1">
                 <Button
@@ -113,7 +129,7 @@ export function ProductFilters({
               role="combobox"
               aria-expanded={openSizes}
               className={cn(
-                "w-[200px] justify-between",
+                "w-full sm:w-[200px] justify-between text-left",
                 selectedSizes.length > 0 && "border-primary"
               )}
             >
@@ -123,10 +139,10 @@ export function ProductFilters({
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0">
+          <PopoverContent className="w-full sm:w-[200px] p-0">
             <ScrollArea className="h-[200px]">
               <div className="space-y-1 p-1">
-                {sizes.map((size) => (
+                {availableSizes.map((size) => (
                   <Button
                     key={size}
                     variant={selectedSizes.includes(size) ? "secondary" : "ghost"}
@@ -153,7 +169,7 @@ export function ProductFilters({
               role="combobox"
               aria-expanded={openColors}
               className={cn(
-                "w-[200px] justify-between",
+                "w-full sm:w-[200px] justify-between text-left",
                 selectedColors.length > 0 && "border-primary"
               )}
             >
@@ -163,10 +179,10 @@ export function ProductFilters({
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0">
+          <PopoverContent className="w-full sm:w-[200px] p-0">
             <ScrollArea className="h-[200px]">
               <div className="space-y-1 p-1">
-                {colors.map((color) => (
+                {availableColors.map((color) => (
                   <Button
                     key={color}
                     variant={selectedColors.includes(color) ? "secondary" : "ghost"}
