@@ -35,6 +35,7 @@ export default function Home() {
   } = useInfiniteQuery({
     queryKey: ['products', selectedCategory],
     queryFn: fetchProducts,
+    initialPageParam: 1,
     getNextPageParam: (lastPage, pages) => {
       return lastPage.hasMore ? pages.length + 1 : undefined;
     },

@@ -1,6 +1,6 @@
 import { products, type Product, type InsertProduct } from "@shared/schema";
 import { db, checkDatabaseConnection } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
@@ -43,9 +43,11 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  private async getCount(query: any): Promise<number> {
-    const [result] = await db.select({ count: db.fn.count() }).from(query);
-    return Number(result.count);
+  private async getCount(query = products): Promise<number> {
+    const result = await db.select({
+      count: sql<number>`count(*)`
+    }).from(query);
+    return result[0].count;
   }
 
   async getAllProducts(page = 1, limit = 12): Promise<PagedResult<Product>> {
@@ -58,7 +60,7 @@ export class DatabaseStorage implements IStorage {
           .orderBy(desc(products.createdAt))
           .limit(limit)
           .offset(offset),
-        this.getCount(products)
+        this.getCount()
       ]);
 
       console.log("Retrieved products count:", items.length, "of total:", total);
@@ -75,12 +77,12 @@ export class DatabaseStorage implements IStorage {
       const offset = (page - 1) * limit;
       console.log("Fetching new collection products page:", page, "at:", new Date().toISOString());
 
-      const query = db.select().from(products).where(eq(products.isNewCollection, true));
+      const baseQuery = db.select().from(products).where(eq(products.isNewCollection, true));
       const [items, total] = await Promise.all([
-        query.orderBy(desc(products.createdAt))
+        baseQuery.orderBy(desc(products.createdAt))
           .limit(limit)
           .offset(offset),
-        this.getCount(query)
+        this.getCount(baseQuery)
       ]);
 
       return {
@@ -96,12 +98,12 @@ export class DatabaseStorage implements IStorage {
       const offset = (page - 1) * limit;
       console.log("Fetching products by category:", category, "page:", page, "at:", new Date().toISOString());
 
-      const query = db.select().from(products).where(eq(products.category, category));
+      const baseQuery = db.select().from(products).where(eq(products.category, category));
       const [items, total] = await Promise.all([
-        query.orderBy(desc(products.createdAt))
+        baseQuery.orderBy(desc(products.createdAt))
           .limit(limit)
           .offset(offset),
-        this.getCount(query)
+        this.getCount(baseQuery)
       ]);
 
       return {
