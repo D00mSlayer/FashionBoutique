@@ -39,11 +39,9 @@ export function Header() {
     <header className="border-b py-3">
       <div className="container mx-auto px-4 flex items-center justify-between">
         <Link href="/">
-          <div className="flex flex-col items-center md:items-start cursor-pointer">
-            <div className="flex items-center justify-center">
-              <Logo />
-            </div>
-            <span className="text-sm font-medium tracking-wide text-muted-foreground mt-1">
+          <div className="flex flex-col items-start cursor-pointer">
+            <Logo />
+            <span className="text-sm font-medium tracking-wide text-muted-foreground ml-1 mt-1">
               Women's Korean & Western Wear
             </span>
           </div>

@@ -77,13 +77,13 @@ export function ProductFilters({
               variant="outline"
               role="combobox"
               aria-expanded={openCategory}
-              className="w-full sm:w-[200px] justify-between text-left"
+              className="max-w-[200px] w-full justify-between text-left"
             >
               {selectedCategory || "All Categories"}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full sm:w-[200px] p-0" align="start" side="bottom">
+          <PopoverContent className="max-w-[200px] w-full p-0" align="start" side="bottom">
             <ScrollArea className="h-[200px]">
               <div className="space-y-1 p-1">
                 <Button
@@ -129,7 +129,7 @@ export function ProductFilters({
               role="combobox"
               aria-expanded={openSizes}
               className={cn(
-                "w-full sm:w-[200px] justify-between text-left",
+                "max-w-[200px] w-full justify-between text-left",
                 selectedSizes.length > 0 && "border-primary"
               )}
             >
@@ -139,7 +139,7 @@ export function ProductFilters({
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full sm:w-[200px] p-0" align="start" side="bottom">
+          <PopoverContent className="max-w-[200px] w-full p-0" align="start" side="bottom">
             <ScrollArea className="h-[200px]">
               <div className="space-y-1 p-1">
                 {availableSizes.map((size) => (
@@ -169,7 +169,7 @@ export function ProductFilters({
               role="combobox"
               aria-expanded={openColors}
               className={cn(
-                "w-full sm:w-[200px] justify-between text-left",
+                "max-w-[200px] w-full justify-between text-left",
                 selectedColors.length > 0 && "border-primary"
               )}
             >
@@ -179,7 +179,7 @@ export function ProductFilters({
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full sm:w-[200px] p-0" align="start" side="bottom">
+          <PopoverContent className="max-w-[200px] w-full p-0" align="start" side="bottom">
             <ScrollArea className="h-[200px]">
               <div className="space-y-1 p-1">
                 {availableColors.map((color) => (
