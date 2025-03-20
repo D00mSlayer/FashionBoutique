@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { openWhatsApp } from "@/lib/whatsapp";
+import { ImagePreview } from "./ImagePreview";
 import type { Product } from "@shared/schema";
 import { useState, useRef, TouchEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -93,15 +94,9 @@ export function ProductCard({ product }: ProductCardProps) {
                     preload="metadata"
                   />
                 ) : (
-                  <img
-                    key={currentMediaIndex}
-                    src={currentMediaItem.thumbnail}
-                    alt={`${product.name} - Image ${currentMediaIndex + 1}`}
-                    className={`object-cover w-full h-full transition-opacity duration-300 ${
-                      isLoading ? 'opacity-0' : 'opacity-100'
-                    }`}
-                    onLoad={() => setIsLoading(false)}
-                    loading={currentMediaIndex === 0 ? "eager" : "lazy"}
+                  <ImagePreview
+                    images={product.media}
+                    productName={product.name}
                   />
                 )}
 
@@ -168,14 +163,18 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.description}
           </p>
           <div className="mt-2 space-y-1">
-            <p className="text-sm">
-              <span className="font-medium">Sizes:</span>{" "}
-              {product.sizes.join(", ")}
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Colors:</span>{" "}
-              {product.colors.join(", ")}
-            </p>
+            {product.sizes.length > 0 && (
+              <p className="text-sm">
+                <span className="font-medium">Sizes:</span>{" "}
+                {product.sizes.join(", ")}
+              </p>
+            )}
+            {product.colors.length > 0 && (
+              <p className="text-sm">
+                <span className="font-medium">Colors:</span>{" "}
+                {product.colors.join(", ")}
+              </p>
+            )}
           </div>
         </div>
       </CardContent>
