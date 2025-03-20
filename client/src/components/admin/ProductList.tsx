@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -30,8 +30,10 @@ export function ProductList() {
 
   const { data: products = [], isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products"],
-    staleTime: 0,
-    retry: false,
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Disable caching completely
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window gains focus
   });
 
   const { mutate: deleteProduct, isPending: isDeleting } = useMutation({
@@ -42,32 +44,16 @@ export function ProductList() {
         throw new Error(error.message || "Failed to delete product");
       }
     },
-    onMutate: async (productId) => {
-      await queryClient.cancelQueries({ queryKey: ["/api/products"] });
-      const previousProducts = queryClient.getQueryData<Product[]>(["/api/products"]);
-
-      if (previousProducts) {
-        queryClient.setQueryData<Product[]>(
-          ["/api/products"],
-          previousProducts.filter(product => product.id !== productId)
-        );
-      }
-
-      return { previousProducts };
-    },
     onSuccess: () => {
+      // Force a complete cache refresh
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({
         title: "Success",
         description: "Product deleted successfully"
       });
     },
-    onError: (error: Error, _, context) => {
-      if (context?.previousProducts) {
-        queryClient.setQueryData(["/api/products"], context.previousProducts);
-      }
+    onError: (error: Error) => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-
       toast({
         title: "Error",
         description: error.message,

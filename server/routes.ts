@@ -23,10 +23,11 @@ export async function registerRoutes(app: Express) {
       images: p.images.map(img => img.substring(0, 50) + '...')
     })));
 
-    // Add cache headers
+    // Disable caching for this endpoint
     res.set({
-      'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
-      'Vary': 'Accept-Encoding'
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
     });
 
     res.json(products);
@@ -35,10 +36,11 @@ export async function registerRoutes(app: Express) {
   app.get("/api/products/new-collection", async (req, res) => {
     const products = await storage.getNewCollection();
 
-    // Add cache headers
+    // Disable caching
     res.set({
-      'Cache-Control': 'public, max-age=300',
-      'Vary': 'Accept-Encoding'
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
     });
 
     res.json(products);
@@ -51,87 +53,88 @@ export async function registerRoutes(app: Express) {
       images: p.images.map(img => img.substring(0, 50) + '...')
     })));
 
-    // Add cache headers
+    // Disable caching
     res.set({
-      'Cache-Control': 'public, max-age=300',
-      'Vary': 'Accept-Encoding'
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
     });
 
     res.json(products);
   });
 
-app.post("/api/products", upload.array("media", 10), async (req, res) => {
-  try {
-    console.log("Received product data:", req.body);
-    console.log("Received files:", req.files?.length, "files");
-    console.log("Files details:", (req.files as Express.Multer.File[])?.map(f => ({
-      name: f.originalname,
-      type: f.mimetype,
-      size: f.size
-    })));
+  app.post("/api/products", upload.array("media", 10), async (req, res) => {
+    try {
+      console.log("Received product data:", req.body);
+      console.log("Received files:", req.files?.length, "files");
+      console.log("Files details:", (req.files as Express.Multer.File[])?.map(f => ({
+        name: f.originalname,
+        type: f.mimetype,
+        size: f.size
+      })));
 
-    const files = req.files as Express.Multer.File[] | undefined;
-    const mediaUrls: string[] = [];
+      const files = req.files as Express.Multer.File[] | undefined;
+      const mediaUrls: string[] = [];
 
-    // Process and compress media files
-    if (files && files.length > 0) {
-      for (const file of files) {
-        try {
-          if (isVideo(file.mimetype)) {
-            const videoUrl = await compressVideo(file.buffer);
-            mediaUrls.push(videoUrl);
-            console.log("Processed video, size:", Math.round(videoUrl.length / 1024), "KB");
-          } else if (isImage(file.mimetype)) {
-            const compressedBuffer = await compressImage(file.buffer);
-            const base64Url = `data:${file.mimetype};base64,${compressedBuffer.toString("base64")}`;
-            mediaUrls.push(base64Url);
-            console.log("Processed image, size:", Math.round(base64Url.length / 1024), "KB");
-          } else {
-            console.log("Unsupported file type:", file.mimetype);
+      // Process and compress media files
+      if (files && files.length > 0) {
+        for (const file of files) {
+          try {
+            if (isVideo(file.mimetype)) {
+              const videoUrl = await compressVideo(file.buffer);
+              mediaUrls.push(videoUrl);
+              console.log("Processed video, size:", Math.round(videoUrl.length / 1024), "KB");
+            } else if (isImage(file.mimetype)) {
+              const compressedBuffer = await compressImage(file.buffer);
+              const base64Url = `data:${file.mimetype};base64,${compressedBuffer.toString("base64")}`;
+              mediaUrls.push(base64Url);
+              console.log("Processed image, size:", Math.round(base64Url.length / 1024), "KB");
+            } else {
+              console.log("Unsupported file type:", file.mimetype);
+            }
+          } catch (error) {
+            console.error("Error processing media file:", error);
           }
-        } catch (error) {
-          console.error("Error processing media file:", error);
         }
       }
-    }
 
-    // Parse form data
-    const productData = {
-      name: req.body.name,
-      description: req.body.description,
-      category: req.body.category,
-      sizes: JSON.parse(req.body.sizes || "[]"),
-      colors: JSON.parse(req.body.colors || "[]"),
-      images: mediaUrls,
-      isNewCollection: req.body.isNewCollection === "true"
-    };
+      // Parse form data
+      const productData = {
+        name: req.body.name,
+        description: req.body.description,
+        category: req.body.category,
+        sizes: JSON.parse(req.body.sizes || "[]"),
+        colors: JSON.parse(req.body.colors || "[]"),
+        images: mediaUrls,
+        isNewCollection: req.body.isNewCollection === "true"
+      };
 
-    console.log("Creating product with data:", {
-      ...productData,
-      images: mediaUrls.map(url => url.substring(0, 50) + '...')
-    });
-
-    const validatedData = insertProductSchema.parse(productData);
-    const product = await storage.createProduct(validatedData);
-
-    console.log("Product saved to database:", {
-      ...product,
-      images: product.images.map(img => img.substring(0, 50) + '...')
-    });
-
-    res.json(product);
-  } catch (error) {
-    console.error("Error creating product:", error);
-    if (error instanceof Error) {
-      res.status(400).json({
-        message: "Invalid product data",
-        details: error.message
+      console.log("Creating product with data:", {
+        ...productData,
+        images: mediaUrls.map(url => url.substring(0, 50) + '...')
       });
-    } else {
-      res.status(400).json({ message: "Invalid product data" });
+
+      const validatedData = insertProductSchema.parse(productData);
+      const product = await storage.createProduct(validatedData);
+
+      console.log("Product saved to database:", {
+        ...product,
+        images: product.images.map(img => img.substring(0, 50) + '...')
+      });
+
+      res.json(product);
+    } catch (error) {
+      console.error("Error creating product:", error);
+      if (error instanceof Error) {
+        res.status(400).json({
+          message: "Invalid product data",
+          details: error.message
+        });
+      } else {
+        res.status(400).json({ message: "Invalid product data" });
+      }
     }
-  }
-});
+  });
 
   app.delete("/api/products/:id", async (req, res) => {
     try {
