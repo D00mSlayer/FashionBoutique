@@ -391,22 +391,41 @@ export default function ProductForm() {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="isNewCollection"
-          render={({ field }) => (
-            <FormItem className="flex items-center space-x-2">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <FormLabel>New Collection</FormLabel>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="flex flex-col sm:flex-row sm:gap-4">
+          <FormField
+            control={form.control}
+            name="isNewCollection"
+            render={({ field }) => (
+              <FormItem className="flex items-center space-x-2">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormLabel>New Collection</FormLabel>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="soldOut"
+            render={({ field }) => (
+              <FormItem className="flex items-center space-x-2">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormLabel>Sold Out</FormLabel>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <Button type="submit" disabled={isPending}>
           {isPending ? "Adding..." : "Add Product"}

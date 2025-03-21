@@ -12,13 +12,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit, Ban } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Product } from "@shared/schema";
+import type { Product, UpdateProduct } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { ProductListControls } from "./ProductListControls";
 import { useState } from "react";
+import { Switch } from "@/components/ui/switch";
 
 interface ProductResponse {
   items: Product[];
@@ -41,6 +42,35 @@ export default function ProductList() {
     refetchInterval: 0, // Don't automatically refetch
     refetchOnMount: true, // Refetch when component mounts
     refetchOnWindowFocus: true, // Refetch when window gains focus
+  });
+
+  const { mutate: updateProductSoldOut, isPending: isUpdating } = useMutation({
+    mutationFn: async ({ id, soldOut }: { id: number; soldOut: boolean }) => {
+      const response = await apiRequest(
+        "PATCH", 
+        `/api/products/${id}`, 
+        { soldOut }
+      );
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update product");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      toast({
+        title: "Success",
+        description: "Product status updated"
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   const { mutate: deleteProduct, isPending: isDeleting } = useMutation({
@@ -169,7 +199,30 @@ export default function ProductList() {
 
                 {/* Product Info */}
                 <div className="flex-grow space-y-2">
-                  <h3 className="font-medium">{product.name}</h3>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <h3 className="font-medium">{product.name}</h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                        product.soldOut 
+                          ? 'bg-destructive/20 text-destructive' 
+                          : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                      }`}>
+                        {product.soldOut ? 'Sold Out' : 'Available'}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={product.soldOut}
+                          onCheckedChange={(checked) => 
+                            updateProductSoldOut({ id: product.id, soldOut: checked })
+                          }
+                          disabled={isUpdating}
+                        />
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {product.soldOut ? 'Mark as Available' : 'Mark as Sold Out'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                   <p className="text-sm text-muted-foreground">{product.category}</p>
                   <div className="flex flex-wrap gap-2">
                     {product.sizes.map((size) => (
