@@ -17,6 +17,7 @@ export const products = pgTable("products", {
   media: jsonb("media").notNull().$type<MediaItem[]>(),
   tags: text("tags").array().notNull(),
   isNewCollection: boolean("is_new_collection").notNull().default(false),
+  soldOut: boolean("sold_out").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -47,6 +48,19 @@ export const insertProductSchema = createInsertSchema(products)
       .transform(tags => Array.from(new Set(tags)))
   });
 
+export const updateProductSchema = createInsertSchema(products)
+  .omit({ id: true, createdAt: true })
+  .extend({
+    media: z.array(z.object({
+      thumbnail: z.string(),
+      full: z.string()
+    })),
+    tags: z.array(z.string().transform(val => val.toLowerCase()))
+      .default([])
+      .transform(tags => Array.from(new Set(tags)))
+  })
+  .partial();
+
 export const loginSchema = z.object({
   username: z.string(),
   password: z.string()
@@ -54,5 +68,6 @@ export const loginSchema = z.object({
 
 export type Category = z.infer<typeof categorySchema>;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type UpdateProduct = z.infer<typeof updateProductSchema>;
 export type Product = typeof products.$inferSelect;
 export type LoginCredentials = z.infer<typeof loginSchema>;

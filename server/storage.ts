@@ -1,4 +1,4 @@
-import { products, type Product, type InsertProduct } from "@shared/schema";
+import { products, type Product, type InsertProduct, type UpdateProduct } from "@shared/schema";
 import { db, checkDatabaseConnection } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 import connectPg from "connect-pg-simple";
@@ -55,7 +55,9 @@ export interface IStorage {
   getAllProducts(page?: number, limit?: number): Promise<PagedResult<Product>>;
   getNewCollection(page?: number, limit?: number): Promise<PagedResult<Product>>;
   getProductsByCategory(category: string, page?: number, limit?: number): Promise<PagedResult<Product>>;
+  getProduct(id: number): Promise<Product | null>;
   createProduct(product: InsertProduct): Promise<Product>;
+  updateProduct(id: number, product: UpdateProduct): Promise<Product>;
   deleteProduct(id: number): Promise<void>;
   getUserByUsername(username: string): Promise<User | null>;
   getUser(id: number): Promise<User | null>;
@@ -112,6 +114,8 @@ export class DatabaseStorage implements IStorage {
 
       const [items, total] = await Promise.all([
         db.select().from(products)
+          // Order by soldOut status first (false first, then true), then by creation date
+          .orderBy(products.soldOut)
           .orderBy(desc(products.createdAt))
           .limit(limit)
           .offset(offset),
@@ -171,7 +175,9 @@ export class DatabaseStorage implements IStorage {
 
       const baseQuery = db.select().from(products).where(eq(products.isNewCollection, true));
       const [items, total] = await Promise.all([
-        baseQuery.orderBy(desc(products.createdAt))
+        baseQuery
+          .orderBy(products.soldOut)
+          .orderBy(desc(products.createdAt))
           .limit(limit)
           .offset(offset),
         this.getCount(baseQuery)
@@ -210,6 +216,7 @@ export class DatabaseStorage implements IStorage {
       const filteredProducts = db.select().from(products).where(eq(products.category, category));
       const [items, total] = await Promise.all([
         db.select().from(filteredProducts)
+          .orderBy(products.soldOut)
           .orderBy(desc(products.createdAt))
           .limit(limit)
           .offset(offset),
@@ -255,6 +262,76 @@ export class DatabaseStorage implements IStorage {
         createdAt: product.createdAt
       });
       return product;
+    });
+  }
+
+  async getProduct(id: number): Promise<Product | null> {
+    return retryOperation(async () => {
+      console.log(`Fetching product with ID: ${id} at:`, new Date().toISOString());
+      
+      const result = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, id));
+      
+      if (!result.length) {
+        return null;
+      }
+      
+      let product = result[0];
+      
+      // Handle media data if needed
+      if (typeof product.media === 'string') {
+        try {
+          product = {
+            ...product,
+            media: JSON.parse(product.media)
+          };
+        } catch (e) {
+          console.error(`Error parsing media for product ${id}:`, e);
+        }
+      }
+      
+      return product;
+    });
+  }
+  
+  async updateProduct(id: number, updateData: UpdateProduct): Promise<Product> {
+    return retryOperation(async () => {
+      console.log(`Updating product with ID: ${id} at:`, new Date().toISOString());
+      
+      // First verify the product exists
+      const existingProducts = await db
+        .select()
+        .from(products)
+        .where(eq(products.id, id));
+      
+      if (!existingProducts.length) {
+        throw new Error(`Product with ID ${id} not found`);
+      }
+      
+      // Proceed with update
+      const [updatedProduct] = await db
+        .update(products)
+        .set(updateData)
+        .where(eq(products.id, id))
+        .returning();
+      
+      console.log(`Successfully updated product ${id}`);
+      
+      // Handle media data if needed
+      if (typeof updatedProduct.media === 'string') {
+        try {
+          return {
+            ...updatedProduct,
+            media: JSON.parse(updatedProduct.media)
+          };
+        } catch (e) {
+          console.error(`Error parsing media for updated product ${id}:`, e);
+        }
+      }
+      
+      return updatedProduct;
     });
   }
 
