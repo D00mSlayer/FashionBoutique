@@ -50,17 +50,14 @@ export function Header() {
             <div className="flex flex-col items-center mt-12">
               <Logo />
               <div className="mt-3 mb-8 text-center">
-                <div className="relative inline-flex flex-col items-center">
-                  <span className="text-xs uppercase tracking-[0.25em] font-light block mb-1">
-                    Women's
+                <div className="relative inline-block">
+                  <span className="text-sm uppercase tracking-[0.15em] font-light">
+                    <span className="font-medium">Women's</span> Korean & Western Wear
                   </span>
-                  <span className="text-sm uppercase tracking-[0.15em] font-medium">
-                    Korean & Western Wear
-                  </span>
-                  <div className="absolute -bottom-3 left-0 right-0 mx-auto w-24 h-[1px] bg-primary/40"></div>
+                  <div className="absolute -bottom-2 left-0 right-0 mx-auto w-full h-[1px] bg-primary/30"></div>
                 </div>
               </div>
-              <Separator className="mb-8 w-16 bg-primary/20" />
+              {/* Removed separator */}
               <NavLinks 
                 className="flex flex-col items-center space-y-6 text-xs tracking-widest" 
                 onClick={handleClose}
@@ -77,22 +74,18 @@ export function Header() {
             <div className="flex flex-col items-center cursor-pointer">
               <Logo />
               <div className="mt-3 md:mt-4 text-center">
-                <div className="relative inline-flex flex-col items-center">
-                  <span className="text-xs md:text-sm uppercase tracking-[0.25em] font-light mb-1">
-                    Women's
+                <div className="relative inline-block">
+                  <span className="text-sm md:text-base uppercase tracking-[0.15em] font-light">
+                    <span className="font-medium">Women's</span> Korean & Western Wear
                   </span>
-                  <span className="text-sm md:text-base uppercase tracking-[0.15em] font-medium">
-                    Korean & Western Wear
-                  </span>
-                  <div className="absolute -bottom-3 left-0 right-0 mx-auto w-24 h-[1px] bg-primary/40"></div>
+                  <div className="absolute -bottom-2 left-0 right-0 mx-auto w-full h-[1px] bg-primary/30"></div>
                 </div>
               </div>
             </div>
           </Link>
         </div>
         
-        {/* Separator - Subtle luxury element */}
-        <Separator className="mb-2 md:mb-4 bg-primary/10" />
+        {/* We're removing the extra separator as requested */}
         
         {/* Navigation - Below logo and tagline (Desktop only) */}
         <div className="flex justify-center items-center">

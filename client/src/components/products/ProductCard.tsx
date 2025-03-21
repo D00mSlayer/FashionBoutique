@@ -67,18 +67,44 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const currentMediaItem = product.media[currentMediaIndex];
 
+  // JSON-LD schema for the product
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "description": product.description,
+    "category": product.category,
+    "image": product.media.length > 0 ? product.media[0].full : "",
+    "offers": {
+      "@type": "Offer",
+      "availability": product.soldOut 
+        ? "https://schema.org/OutOfStock" 
+        : "https://schema.org/InStock",
+      "itemCondition": "https://schema.org/NewCondition"
+    },
+    "brand": {
+      "@type": "Brand",
+      "name": "Viba Chic"
+    }
+  };
+
   return (
-    <Card className="overflow-hidden group">
-      <CardContent className="p-0">
-        {/* Media Section */}
-        <div className="relative bg-muted">
-          <div 
-            ref={mediaRef}
-            className="relative aspect-square"
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >
+    <article className="overflow-hidden group">
+      <script type="application/ld+json">
+        {JSON.stringify(productSchema)}
+      </script>
+      
+      <Card>
+        <CardContent className="p-0">
+          {/* Media Section */}
+          <figure className="relative bg-muted">
+            <div 
+              ref={mediaRef}
+              className="relative aspect-square"
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
             {product.media.length > 0 ? (
               <>
                 {isVideo(currentMediaItem.full) ? (
@@ -181,52 +207,53 @@ export function ProductCard({ product }: ProductCardProps) {
                 No image available
               </div>
             )}
+            </div>
+          </figure>
+
+          {/* Product Details */}
+          <div className="p-4">
+            <h3 className="font-semibold">{product.name}</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {product.description}
+            </p>
+            <div className="mt-2 space-y-1">
+              {product.sizes.length > 0 && (
+                <p className="text-sm">
+                  <span className="font-medium">Sizes:</span>{" "}
+                  {product.sizes.join(", ")}
+                </p>
+              )}
+              {product.colors.length > 0 && (
+                <p className="text-sm">
+                  <span className="font-medium">Colors:</span>{" "}
+                  {product.colors.join(", ")}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
+        </CardContent>
 
-        {/* Product Details */}
-        <div className="p-4">
-          <h3 className="font-semibold">{product.name}</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            {product.description}
-          </p>
-          <div className="mt-2 space-y-1">
-            {product.sizes.length > 0 && (
-              <p className="text-sm">
-                <span className="font-medium">Sizes:</span>{" "}
-                {product.sizes.join(", ")}
-              </p>
-            )}
-            {product.colors.length > 0 && (
-              <p className="text-sm">
-                <span className="font-medium">Colors:</span>{" "}
-                {product.colors.join(", ")}
-              </p>
-            )}
-          </div>
-        </div>
-      </CardContent>
+        <CardFooter className="p-4 pt-0">
+          <Button
+            className="w-full"
+            onClick={() => openWhatsApp(product)}
+            disabled={product.soldOut}
+          >
+            {product.soldOut ? "Sold Out" : "Inquire on WhatsApp"}
+          </Button>
+        </CardFooter>
 
-      <CardFooter className="p-4 pt-0">
-        <Button
-          className="w-full"
-          onClick={() => openWhatsApp(product)}
-          disabled={product.soldOut}
-        >
-          {product.soldOut ? "Sold Out" : "Inquire on WhatsApp"}
-        </Button>
-      </CardFooter>
-
-      {/* Image Preview Dialog */}
-      {!isVideo(currentMediaItem?.full) && (
-        <ImagePreview
-          images={product.media}
-          productName={product.name}
-          isOpen={showPreview}
-          onClose={() => setShowPreview(false)}
-          initialIndex={currentMediaIndex}
-        />
-      )}
-    </Card>
+        {/* Image Preview Dialog */}
+        {!isVideo(currentMediaItem?.full) && (
+          <ImagePreview
+            images={product.media}
+            productName={product.name}
+            isOpen={showPreview}
+            onClose={() => setShowPreview(false)}
+            initialIndex={currentMediaIndex}
+          />
+        )}
+      </Card>
+    </article>
   );
 }
