@@ -55,8 +55,8 @@ export async function sendErrorNotification(error: Error, options: ErrorNotifica
       <h3>Additional Information:</h3>
       <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; overflow: auto;">${JSON.stringify(additionalInfo, null, 2)}</pre>
     `;
-  
-  const mailOptions = {
+    
+    const mailOptions = {
       from: `"Viba Chic Error Monitor" <${process.env.SMTP_USER}>`,
       to: process.env.ADMIN_EMAIL,
       subject: `[${envTag}] ${subject} - Viba Chic Website`,

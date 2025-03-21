@@ -54,13 +54,15 @@ export interface IStorage {
 async function getProductMediaFromDB(productId: number) {
   try {
     // Query the raw media value from database
-    const result = await db.execute(
+    const result = await db.execute<{ media: string }>(
       sql`SELECT media FROM products WHERE id = ${productId}`
     );
 
-    if (result && result.length > 0 && result[0].media) {
+    // Safely access results from the query
+    const rows = result.rows;
+    if (rows && rows.length > 0 && rows[0]?.media) {
       try {
-        return JSON.parse(result[0].media);
+        return JSON.parse(rows[0].media);
       } catch (e) {
         console.error("Error parsing media JSON from DB:", e);
         return [];
@@ -114,30 +116,32 @@ export class DatabaseStorage implements IStorage {
         if (typeof item.media === 'object') {
           // Already properly formed
           return item;
-        } else if (typeof item.media === 'string' && item.media.startsWith('[{')) {
-          // It's a JSON string, parse it
-          try {
-            return {
-              ...item,
-              media: JSON.parse(item.media)
-            };
-          } catch (e) {
-            console.error("Error parsing media JSON:", e);
-            return item;
-          }
-        } else if (typeof item.media === 'string' && item.media.includes('items')) {
-          // Get the actual media from DB
-          return getProductMediaFromDB(item.id)
-            .then(mediaData => {
+        } else if (typeof item.media === 'string') {
+          if (item.media.startsWith('[{')) {
+            // It's a JSON string, parse it
+            try {
               return {
                 ...item,
-                media: mediaData
+                media: JSON.parse(item.media as string)
               };
-            })
-            .catch(err => {
-              console.error(`Error getting media for product ${item.id}:`, err);
+            } catch (e) {
+              console.error("Error parsing media JSON:", e);
               return item;
-            });
+            }
+          } else if ((item.media as string).includes('items')) {
+            // Get the actual media from DB
+            return getProductMediaFromDB(item.id)
+              .then(mediaData => {
+                return {
+                  ...item,
+                  media: mediaData
+                };
+              })
+              .catch(err => {
+                console.error(`Error getting media for product ${item.id}:`, err);
+                return item;
+              });
+          }
         }
         return item;
       });

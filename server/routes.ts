@@ -238,7 +238,7 @@ export async function registerRoutes(app: Express) {
 
       // Verify deletion
       const products = await storage.getAllProducts();
-      console.log("Remaining products:", products.length);
+      console.log("Remaining products:", products.items.length);
 
       res.status(204).end();
     } catch (error) {
