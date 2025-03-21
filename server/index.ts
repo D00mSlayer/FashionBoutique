@@ -4,10 +4,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from "./auth";
 import { setupGlobalErrorHandlers, sendErrorNotification } from "./utils/errorReporting";
 
-// Set up global error handlers for email notifications in production
-if (process.env.NODE_ENV === 'production') {
-  setupGlobalErrorHandlers();
-}
+// Set up global error handlers for email notifications
+setupGlobalErrorHandlers();
 
 const app = express();
 app.use(express.json());

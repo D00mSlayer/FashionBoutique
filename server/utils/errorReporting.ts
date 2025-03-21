@@ -12,11 +12,13 @@ interface ErrorNotificationOptions {
 const transporter = createTransport({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+  secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+  logger: process.env.NODE_ENV === 'development', // Enable logging in development
+  debug: process.env.NODE_ENV === 'development', // Include debug info in development
 });
 
 /**
@@ -77,26 +79,26 @@ export async function sendErrorNotification(error: Error, options: ErrorNotifica
  * Global error handler for uncaught exceptions and unhandled promise rejections
  */
 export function setupGlobalErrorHandlers() {
-  if (process.env.NODE_ENV !== 'development') {
-    // Handle uncaught exceptions
-    process.on('uncaughtException', async (error) => {
-      console.error('UNCAUGHT EXCEPTION:', error);
-      await sendErrorNotification(error, {
-        subject: 'Uncaught Exception',
-        additionalInfo: { type: 'uncaughtException' }
-      });
+  console.log('Setting up global error handlers for email notifications');
+  // Always set up handlers regardless of environment
+  // Handle uncaught exceptions
+  process.on('uncaughtException', async (error) => {
+    console.error('UNCAUGHT EXCEPTION:', error);
+    await sendErrorNotification(error, {
+      subject: 'Uncaught Exception',
+      additionalInfo: { type: 'uncaughtException' }
     });
+  });
 
-    // Handle unhandled promise rejections
-    process.on('unhandledRejection', async (reason, promise) => {
-      console.error('UNHANDLED REJECTION:', reason);
-      const error = reason instanceof Error ? reason : new Error(String(reason));
-      await sendErrorNotification(error, {
-        subject: 'Unhandled Promise Rejection',
-        additionalInfo: { type: 'unhandledRejection' }
-      });
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', async (reason, promise) => {
+    console.error('UNHANDLED REJECTION:', reason);
+    const error = reason instanceof Error ? reason : new Error(String(reason));
+    await sendErrorNotification(error, {
+      subject: 'Unhandled Promise Rejection',
+      additionalInfo: { type: 'unhandledRejection' }
     });
+  });
 
-    console.log('Global error handlers set up for email notifications');
-  }
+  console.log('Global error handlers set up for email notifications');
 }
