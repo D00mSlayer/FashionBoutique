@@ -41,9 +41,16 @@ export async function sendErrorNotification(error: Error, options: ErrorNotifica
     const envTag = env === 'production' ? '🔴 PROD' : '🟢 DEV';
     
     // Format the error information
+    // Format time in IST timezone
+    const istTime = new Date().toLocaleString('en-IN', { 
+      timeZone: 'Asia/Kolkata',
+      dateStyle: 'full', 
+      timeStyle: 'long' 
+    });
+    
     const errorDetails = `
       <h2>Error Details:</h2>
-      <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+      <p><strong>Time (IST):</strong> ${istTime}</p>
       <p><strong>Environment:</strong> <span style="${envStyle}">${env.toUpperCase()}</span></p>
       <p><strong>Error:</strong> ${error.message}</p>
       <p><strong>URL:</strong> ${additionalInfo.url || 'Not available'}</p>
@@ -75,7 +82,8 @@ export async function sendErrorNotification(error: Error, options: ErrorNotifica
 
     // Send the email
     const info = await transporter.sendMail(mailOptions);
-    console.log('Error notification email sent:', info.messageId);
+    const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    console.log(`Error notification email sent at ${now} (IST):`, info.messageId);
     return info;
   } catch (emailError) {
     console.error('Failed to send error notification email:', emailError);

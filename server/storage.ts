@@ -117,18 +117,19 @@ export class DatabaseStorage implements IStorage {
           // Already properly formed
           return item;
         } else if (typeof item.media === 'string') {
-          if (item.media.startsWith('[{')) {
+          const mediaStr = item.media as string;
+          if (mediaStr.startsWith('[{')) {
             // It's a JSON string, parse it
             try {
               return {
                 ...item,
-                media: JSON.parse(item.media as string)
+                media: JSON.parse(mediaStr)
               };
             } catch (e) {
               console.error("Error parsing media JSON:", e);
               return item;
             }
-          } else if ((item.media as string).includes('items')) {
+          } else if (mediaStr.includes('items')) {
             // Get the actual media from DB
             return getProductMediaFromDB(item.id)
               .then(mediaData => {
@@ -184,10 +185,11 @@ export class DatabaseStorage implements IStorage {
       const processedItems = items.map(item => {
         // If media is a string (serialized JSON), parse it
         if (typeof item.media === 'string') {
+          const mediaStr = item.media as string;
           try {
             return {
               ...item,
-              media: JSON.parse(item.media)
+              media: JSON.parse(mediaStr)
             };
           } catch (e) {
             console.error("Error parsing media JSON:", e);
@@ -232,10 +234,11 @@ export class DatabaseStorage implements IStorage {
       const processedItems = items.map(item => {
         // If media is a string (serialized JSON), parse it
         if (typeof item.media === 'string') {
+          const mediaStr = item.media as string;
           try {
             return {
               ...item,
-              media: JSON.parse(item.media)
+              media: JSON.parse(mediaStr)
             };
           } catch (e) {
             console.error("Error parsing media JSON:", e);
@@ -287,10 +290,11 @@ export class DatabaseStorage implements IStorage {
       
       // Handle media data if needed
       if (typeof product.media === 'string') {
+        const mediaStr = product.media as string;
         try {
           product = {
             ...product,
-            media: JSON.parse(product.media)
+            media: JSON.parse(mediaStr)
           };
         } catch (e) {
           console.error(`Error parsing media for product ${id}:`, e);
