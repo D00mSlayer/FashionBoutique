@@ -185,6 +185,42 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  app.patch("/api/products/:id", async (req, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+
+      console.log("Updating product with ID:", productId, "Data:", req.body);
+      
+      // Get the existing product to make sure it exists
+      const existingProduct = await storage.getProduct(productId);
+      if (!existingProduct) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      // Update the product (only updating soldOut status for now)
+      const updatedProduct = await storage.updateProduct(productId, {
+        soldOut: req.body.soldOut !== undefined ? req.body.soldOut : existingProduct.soldOut
+      });
+
+      console.log("Successfully updated product:", productId, "Sold out:", updatedProduct.soldOut);
+      
+      res.json(updatedProduct);
+    } catch (error) {
+      console.error("Error updating product:", error);
+      if (error instanceof Error) {
+        res.status(400).json({
+          message: "Failed to update product",
+          details: error.message
+        });
+      } else {
+        res.status(500).json({ message: "Failed to update product" });
+      }
+    }
+  });
+
   app.delete("/api/products/:id", async (req, res) => {
     try {
       const productId = parseInt(req.params.id);
