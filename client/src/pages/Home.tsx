@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { ProductGrid } from "@/components/products/ProductGrid";
 import { ProductFilters } from "@/components/products/ProductFilters";
+import { usePageView } from "@/hooks/use-page-view";
 import { categories } from "@shared/schema";
 import type { Product } from "@shared/schema";
 

@@ -68,6 +68,16 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const currentMediaItem = product.media[currentMediaIndex];
 
+  // Track product view when component mounts
+  useEffect(() => {
+    // Send product view analytics event
+    trackProductView({
+      id: product.id,
+      name: product.name,
+      category: product.category
+    });
+  }, [product.id]); // Only re-run if product ID changes
+
   // JSON-LD schema for the product
   const productSchema = {
     "@context": "https://schema.org",
