@@ -39,18 +39,6 @@ export interface PagedResult<T> {
 }
 
 //Assuming User and InsertUser types are defined elsewhere, likely in @shared/schema
-export interface User {
-  id: number;
-  username: string;
-  // ... other user properties
-}
-
-export interface InsertUser {
-  username: string;
-  // ... other user properties for insertion
-}
-
-
 export interface IStorage {
   getAllProducts(page?: number, limit?: number): Promise<PagedResult<Product>>;
   getNewCollection(page?: number, limit?: number): Promise<PagedResult<Product>>;
@@ -59,9 +47,6 @@ export interface IStorage {
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: number, product: UpdateProduct): Promise<Product>;
   deleteProduct(id: number): Promise<void>;
-  getUserByUsername(username: string): Promise<User | null>;
-  getUser(id: number): Promise<User | null>;
-  createUser(user: InsertUser): Promise<User>;
   sessionStore: session.Store;
 }
 
@@ -100,11 +85,25 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  private async getCount(query = products): Promise<number> {
-    const result = await db.select({
-      count: sql<number>`count(*)`
-    }).from(query);
-    return result[0].count;
+  private async getCount(query: any = products): Promise<number> {
+    // Handle different query types
+    if (query === products) {
+      // Simple count of all products
+      const result = await db.select({
+        count: sql<number>`count(*)`
+      }).from(products);
+      return result[0].count;
+    } else {
+      // This is a filtered query (ex: category filter)
+      // We need to count directly using the SQL count function
+      // Execute the count as a direct SQL query
+      const result = await db.execute(sql`
+        SELECT COUNT(*) FROM (${query.toSQL().sql}) as subquery
+      `);
+      
+      // The result comes back with a count field
+      return parseInt(result.rows[0].count);
+    }
   }
 
   async getAllProducts(page = 1, limit = 12): Promise<PagedResult<Product>> {
@@ -212,14 +211,19 @@ export class DatabaseStorage implements IStorage {
       const offset = (page - 1) * limit;
       console.log("Fetching products by category:", category, "page:", page, "at:", new Date().toISOString());
 
-      const filteredProducts = db.select().from(products).where(eq(products.category, category));
+      // Fix: Don't use a subquery, instead directly query with the filter
       const [items, total] = await Promise.all([
-        db.select().from(filteredProducts)
+        db.select()
+          .from(products)
+          .where(eq(products.category, category))
           // Order by sold_out status (false first) then by creation date (newest first)
           .orderBy(products.soldOut, desc(products.createdAt))
           .limit(limit)
           .offset(offset),
-        this.getCount(products)
+        // Count only products in this category
+        this.getCount(
+          db.select().from(products).where(eq(products.category, category))
+        )
       ]);
 
       // Check if media needs conversion from string to JSON

@@ -26,7 +26,7 @@ export default function Contact() {
             <div className="flex items-center gap-3">
               <Clock className="h-5 w-5 text-primary" />
               <div>
-                <p>All Days: 10:00 AM - 10:00 PM</p>
+                <p>All Days: 11:00 AM - 10:00 PM</p>
               </div>
             </div>
           </div>
