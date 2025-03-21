@@ -64,21 +64,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         await apiRequest({
           method: "POST", 
-          path: "/api/logout"
+          path: "/api/logout", 
+          responseType: 'text' // Use text response type to avoid JSON parsing
         });
+        return; // Return void as expected
       } catch (error) {
         console.error("Logout error:", error);
-        throw new Error("Logout failed. Please try again later.");
+        // Force logout on client side even if server request fails
+        queryClient.setQueryData(["/api/user"], null);
+        // Don't throw - we'll handle it gracefully
+        return;
       }
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
     },
     onError: (error) => {
+      // We won't get here due to our error handling in mutationFn,
+      // but keeping it for safety
+      console.error("Logout error in onError:", error);
+      // Force logout on client side
+      queryClient.setQueryData(["/api/user"], null);
       toast({
-        title: "Logout failed",
-        description: error.message,
-        variant: "destructive",
+        title: "Warning",
+        description: "Logged out locally, but there may have been a server error.",
+        variant: "default",
       });
     },
   });

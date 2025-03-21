@@ -2,8 +2,13 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    try {
+      const text = (await res.text()) || res.statusText;
+      throw new Error(`${res.status}: ${text}`);
+    } catch (error) {
+      // If we can't read the response text, just use the status text
+      throw new Error(`${res.status}: ${res.statusText}`);
+    }
   }
 }
 
@@ -41,17 +46,32 @@ export async function apiRequest({
 
   await throwIfResNotOk(res);
   
-  // Return the appropriate response format based on responseType
-  if (responseType === 'json') {
-    return await res.json();
-  } else if (responseType === 'text') {
-    return await res.text();
-  } else if (responseType === 'blob') {
-    return await res.blob();
-  } else if (responseType === 'arrayBuffer') {
-    return await res.arrayBuffer();
-  } else if (responseType === 'formData') {
-    return await res.formData();
+  // Handle empty responses safely
+  if (res.status === 204 || res.headers.get('Content-Length') === '0') {
+    // Return null or empty object for no content responses
+    return responseType === 'json' ? {} : null;
+  }
+  
+  try {
+    // Return the appropriate response format based on responseType
+    if (responseType === 'json') {
+      const text = await res.text();
+      return text ? JSON.parse(text) : {};
+    } else if (responseType === 'text') {
+      return await res.text();
+    } else if (responseType === 'blob') {
+      return await res.blob();
+    } else if (responseType === 'arrayBuffer') {
+      return await res.arrayBuffer();
+    } else if (responseType === 'formData') {
+      return await res.formData();
+    }
+  } catch (error) {
+    console.error('Error parsing response:', error);
+    if (responseType === 'json') {
+      return {}; // Return empty object for JSON parse errors
+    }
+    throw error;
   }
   
   return res;
@@ -81,7 +101,19 @@ export const getQueryFn: <T>(options: {
     }
 
     await throwIfResNotOk(res);
-    return await res.json();
+    
+    // Handle empty responses safely
+    if (res.status === 204 || res.headers.get('Content-Length') === '0') {
+      return {}; // Return empty object for no content responses
+    }
+    
+    try {
+      const text = await res.text();
+      return text ? JSON.parse(text) : {};
+    } catch (error) {
+      console.error('Error parsing response:', error);
+      return {}; // Return empty object for JSON parse errors
+    }
   };
 
 export const queryClient = new QueryClient({
