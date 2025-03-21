@@ -93,17 +93,34 @@ export class DatabaseStorage implements IStorage {
         count: sql<number>`count(*)`
       }).from(products);
       return result[0].count;
-    } else {
-      // This is a filtered query (ex: category filter)
-      // We need to count directly using the SQL count function
-      // Execute the count as a direct SQL query
-      const result = await db.execute(sql`
-        SELECT COUNT(*) FROM (${query.toSQL().sql}) as subquery
-      `);
-      
-      // The result comes back with a count field
-      return parseInt(result.rows[0].count);
+    } else if (typeof query === 'object' && query.where) {
+      // If it's a filtered query for products by category,
+      // create a direct count query with the same filter
+      if (query._[0].selection.category) {
+        const category = query._[0].where[0].value;
+        const result = await db.select({
+          count: sql<number>`count(*)`
+        })
+        .from(products)
+        .where(eq(products.category, category));
+        return result[0].count;
+      }
+      // For new collection filter
+      if (query._[0].selection.isNewCollection) {
+        const result = await db.select({
+          count: sql<number>`count(*)`
+        })
+        .from(products)
+        .where(eq(products.isNewCollection, true));
+        return result[0].count;
+      }
     }
+    
+    // Fallback to counting all products
+    const result = await db.select({
+      count: sql<number>`count(*)`
+    }).from(products);
+    return result[0].count;
   }
 
   async getAllProducts(page = 1, limit = 12): Promise<PagedResult<Product>> {
@@ -362,30 +379,7 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  // User-related methods
-  async getUserByUsername(username: string): Promise<User | null> {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.username, username));
-    return user || null;
-  }
-
-  async getUser(id: number): Promise<User | null> {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, id));
-    return user || null;
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(insertUser)
-      .returning();
-    return user;
-  }
+  // Authentication is handled via environment variables, not database
 }
 
 export const storage = new DatabaseStorage();
