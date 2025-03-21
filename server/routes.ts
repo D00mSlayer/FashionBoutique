@@ -7,6 +7,7 @@ import { fromZodError } from "zod-validation-error";
 import { compressImage, compressVideo, isVideo, isImage } from "./utils/mediaProcessor";
 import { sendErrorNotification } from "./utils/errorReporting";
 import { z } from "zod";
+import { addErrorTestRoute } from "./test-route";
 
 // Configure multer for in-memory file storage
 const upload = multer({
@@ -304,32 +305,41 @@ export async function registerRoutes(app: Express) {
     }
   });
 
-  // Test endpoint to verify error email notifications (only in development)
-  if (process.env.NODE_ENV === 'development') {
-    app.get("/api/test-error-notification", async (req, res) => {
-      try {
-        const testError = new Error("This is a test error notification");
-        testError.name = "TestError";
-        
-        await sendErrorNotification(testError, {
-          subject: "Test Error Notification",
-          additionalInfo: {
-            test: true,
-            timestamp: new Date().toISOString()
-          }
-        });
-        
-        res.json({ message: "Test error notification sent" });
-      } catch (error) {
-        console.error("Failed to send test error notification:", error);
-        res.status(500).json({ 
-          message: "Failed to send test error notification",
-          error: error instanceof Error ? error.message : String(error)
-        });
-      }
-    });
-  }
+  // Test endpoint to verify error email notifications (available in all environments for testing)
+  app.get("/api/test-error-notification", async (req, res) => {
+    try {
+      console.log("Testing error notification system...");
+      const testError = new Error("This is a test error notification");
+      testError.name = "TestError";
+      
+      await sendErrorNotification(testError, {
+        subject: "Test Error Notification",
+        additionalInfo: {
+          test: true,
+          source: 'Test Route',
+          environment: process.env.NODE_ENV || 'unknown',
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+      console.log("Test notification sent successfully");
+      res.json({ 
+        success: true, 
+        message: "Test error notification sent. Check admin email."
+      });
+    } catch (error) {
+      console.error("Failed to send test error notification:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to send test error notification",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
 
+  // Add a route that deliberately triggers an error for testing
+  addErrorTestRoute(app);
+  
   const httpServer = createServer(app);
   return httpServer;
 }
