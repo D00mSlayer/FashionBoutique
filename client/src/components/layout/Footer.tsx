@@ -2,6 +2,7 @@ import { SiInstagram, SiFacebook, SiWhatsapp } from "react-icons/si";
 import { MapPin, Phone, Mail, Heart } from "lucide-react";
 import { config } from "@shared/config";
 import { Separator } from "@/components/ui/separator";
+import { Link } from "wouter";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -62,8 +63,12 @@ export function Footer() {
           <p>&copy; {currentYear} Viba Chic. All Rights Reserved.</p>
         </div>
         <div className="flex gap-4 md:gap-8">
-          <a href="#" className="hover:text-primary transition-colors duration-200">Privacy Policy</a>
-          <a href="#" className="hover:text-primary transition-colors duration-200">Terms of Service</a>
+          <Link href="/privacy" className="hover:text-primary transition-colors duration-200">
+            Privacy Policy
+          </Link>
+          <Link href="/terms" className="hover:text-primary transition-colors duration-200">
+            Terms of Service
+          </Link>
           <span className="hidden md:flex items-center text-primary">
             Made with <Heart className="h-3 w-3 mx-1 fill-current" /> in Bangalore
           </span>
