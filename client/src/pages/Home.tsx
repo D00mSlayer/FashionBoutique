@@ -6,6 +6,9 @@ import { usePageView } from "@/hooks/use-page-view";
 import { categories } from "@shared/schema";
 import type { Product } from "@shared/schema";
 
+// Create a mutable copy of the categories for the component props
+const categoryList: string[] = Array.from(categories);
+
 interface ProductResponse {
   items: Product[];
   total: number;
@@ -13,6 +16,9 @@ interface ProductResponse {
 }
 
 export default function Home() {
+  // Track page view
+  usePageView("Home - Product Catalog");
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
@@ -130,7 +136,7 @@ export default function Home() {
   return (
     <div className="container mx-auto px-4 py-8">
       <ProductFilters
-        categories={categories}
+        categories={categoryList}
         sizes={availableSizes}
         colors={availableColors}
         selectedCategory={selectedCategory}

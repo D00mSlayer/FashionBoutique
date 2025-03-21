@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { ProductGrid } from "@/components/products/ProductGrid";
+import { usePageView } from "@/hooks/use-page-view";
 import type { Product } from "@shared/schema";
 
 export default function NewCollection() {
+  // Track page view
+  usePageView("New Collection");
   const { data: products, isLoading } = useQuery<Product[]>({
     queryKey: ["/api/products/new-collection"],
   });
