@@ -9,7 +9,7 @@ const Logo = () => (
   <img 
     src="/assets/brand-logo.png" 
     alt="Viba Chic" 
-    className="h-10 md:h-12 object-contain"
+    className="h-16 md:h-20 object-contain"
     width="auto"
     height="auto"
   />
@@ -37,14 +37,14 @@ export function Header() {
   const handleClose = () => setIsOpen(false);
 
   return (
-    <header className="py-4 md:py-6 bg-background">
+    <header className="py-4 md:py-6 bg-background shadow-sm">
       <div className="container mx-auto px-4">
         {/* Logo and Tagline - Centered */}
         <div className="flex flex-col items-center justify-center mb-2 md:mb-4">
           <Link href="/">
             <div className="flex flex-col items-center cursor-pointer">
               <Logo />
-              <div className="mt-2 text-center">
+              <div className="mt-3 md:mt-4 text-center">
                 <div className="relative inline-flex flex-col items-center">
                   <span className="text-xs md:text-sm uppercase tracking-[0.25em] font-light mb-1">
                     Women's
@@ -52,7 +52,7 @@ export function Header() {
                   <span className="text-sm md:text-base uppercase tracking-[0.15em] font-medium">
                     Korean & Western Wear
                   </span>
-                  <div className="absolute -bottom-2 left-0 right-0 mx-auto w-16 h-[1px] bg-primary/40"></div>
+                  <div className="absolute -bottom-3 left-0 right-0 mx-auto w-24 h-[1px] bg-primary/40"></div>
                 </div>
               </div>
             </div>
@@ -77,15 +77,18 @@ export function Header() {
             <SheetContent>
               <div className="flex flex-col items-center mt-12">
                 <Logo />
-                <div className="mt-2 mb-8 text-center">
-                  <span className="text-xs uppercase tracking-[0.25em] font-light block mb-1">
-                    Women's
-                  </span>
-                  <span className="text-sm uppercase tracking-[0.15em] font-medium">
-                    Korean & Western Wear
-                  </span>
+                <div className="mt-3 mb-8 text-center">
+                  <div className="relative inline-flex flex-col items-center">
+                    <span className="text-xs uppercase tracking-[0.25em] font-light block mb-1">
+                      Women's
+                    </span>
+                    <span className="text-sm uppercase tracking-[0.15em] font-medium">
+                      Korean & Western Wear
+                    </span>
+                    <div className="absolute -bottom-3 left-0 right-0 mx-auto w-24 h-[1px] bg-primary/40"></div>
+                  </div>
                 </div>
-                <Separator className="mb-8 w-12 bg-primary/20" />
+                <Separator className="mb-8 w-16 bg-primary/20" />
                 <NavLinks 
                   className="flex flex-col items-center space-y-6 text-xs tracking-widest" 
                   onClick={handleClose}
