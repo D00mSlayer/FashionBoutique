@@ -52,7 +52,7 @@ export function Header() {
               <div className="mt-3 mb-8 text-center">
                 <div className="relative inline-block">
                   <span className="text-sm uppercase tracking-[0.15em] font-light">
-                    <span className="font-medium">Women's</span> Korean & Western Wear
+                    Women's Korean & Western Fashion
                   </span>
                   <div className="absolute -bottom-2 left-0 right-0 mx-auto w-full h-[1px] bg-primary/30"></div>
                 </div>
@@ -76,7 +76,7 @@ export function Header() {
               <div className="mt-3 md:mt-4 text-center">
                 <div className="relative inline-block">
                   <span className="text-sm md:text-base uppercase tracking-[0.15em] font-light">
-                    <span className="font-medium">Women's</span> Korean & Western Wear
+                    Women's Korean & Western Wear
                   </span>
                   <div className="absolute -bottom-2 left-0 right-0 mx-auto w-full h-[1px] bg-primary/30"></div>
                 </div>
