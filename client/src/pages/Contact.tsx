@@ -1,8 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { usePageView } from "@/hooks/use-page-view";
 import { config } from "@shared/config";
 
 export default function Contact() {
+  // Track page view
+  usePageView("Contact Us");
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Visit Our Store</h1>
