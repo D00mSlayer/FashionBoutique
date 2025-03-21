@@ -46,16 +46,17 @@ export default function ProductList() {
 
   const { mutate: updateProductSoldOut, isPending: isUpdating } = useMutation({
     mutationFn: async ({ id, soldOut }: { id: number; soldOut: boolean }) => {
-      const response = await apiRequest(
-        "PATCH", 
-        `/api/products/${id}`, 
-        { soldOut }
-      );
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update product");
+      try {
+        return await apiRequest({
+          method: "PATCH", 
+          path: `/api/products/${id}`, 
+          data: { soldOut }
+        });
+      } catch (error) {
+        console.error("Error updating product:", error);
+        // Provide a user-friendly error message
+        throw new Error("Server communication error. The database may be temporarily unavailable.");
       }
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
@@ -75,10 +76,15 @@ export default function ProductList() {
 
   const { mutate: deleteProduct, isPending: isDeleting } = useMutation({
     mutationFn: async (productId: number) => {
-      const response = await apiRequest("DELETE", `/api/products/${productId}`);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to delete product");
+      try {
+        return await apiRequest({
+          method: "DELETE", 
+          path: `/api/products/${productId}`
+        });
+      } catch (error) {
+        console.error("Error deleting product:", error);
+        // Provide a user-friendly error message
+        throw new Error("Server communication error. The database may be temporarily unavailable.");
       }
     },
     onSuccess: () => {
