@@ -14,8 +14,11 @@ import {
 import { loginSchema } from "@shared/schema";
 import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
+import { usePageView } from "@/hooks/use-page-view";
 
 export default function AuthPage() {
+  // Track page view
+  usePageView("Admin Login");
   const { user, loginMutation } = useAuth();
 
   const loginForm = useForm({

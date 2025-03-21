@@ -51,3 +51,39 @@ export function trackProductView(product: {
     }]
   });
 }
+
+// Track WhatsApp inquiries
+export function trackWhatsAppInquiry(product: {
+  id: number;
+  name: string;
+  category: string;
+}) {
+  gtag('event', 'whatsapp_inquiry', {
+    item_id: product.id,
+    item_name: product.name,
+    item_category: product.category
+  });
+}
+
+// Track social media clicks
+export function trackSocialClick(platform: string) {
+  gtag('event', 'social_click', {
+    platform: platform
+  });
+}
+
+// Track category filter usage
+export function trackCategoryFilter(category: string) {
+  gtag('event', 'filter_selection', {
+    filter_type: 'category',
+    filter_value: category
+  });
+}
+
+// Track errors
+export function trackError(errorType: string, errorMessage: string) {
+  gtag('event', 'application_error', {
+    error_type: errorType,
+    error_message: errorMessage
+  });
+}

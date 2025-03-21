@@ -1,5 +1,5 @@
 import type { Product } from "@shared/schema";
-import { trackEvent } from "./analytics";
+import { trackWhatsAppInquiry } from "./analytics";
 
 export function createWhatsAppMessage(product: Product): string {
   const message = `Hi, I'm interested in:\n\n` +
@@ -17,11 +17,10 @@ export function openWhatsApp(product: Product) {
   const phoneNumber = "+916363840247"; // Replace with actual number
   
   // Track WhatsApp inquiry event for analytics
-  trackEvent('inquire_via_whatsapp', {
-    product_id: product.id,
-    product_name: product.name,
-    product_category: product.category,
-    is_new_collection: product.isNewCollection
+  trackWhatsAppInquiry({
+    id: product.id,
+    name: product.name,
+    category: product.category
   });
   
   window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");
