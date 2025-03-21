@@ -69,5 +69,6 @@ export const loginSchema = z.object({
 export type Category = z.infer<typeof categorySchema>;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type UpdateProduct = z.infer<typeof updateProductSchema>;
+// Product type with soldOut field
 export type Product = typeof products.$inferSelect;
 export type LoginCredentials = z.infer<typeof loginSchema>;
