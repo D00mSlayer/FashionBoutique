@@ -85,38 +85,8 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  private async getCount(query: any = products): Promise<number> {
-    // Handle different query types
-    if (query === products) {
-      // Simple count of all products
-      const result = await db.select({
-        count: sql<number>`count(*)`
-      }).from(products);
-      return result[0].count;
-    } else if (typeof query === 'object' && query.where) {
-      // If it's a filtered query for products by category,
-      // create a direct count query with the same filter
-      if (query._[0].selection.category) {
-        const category = query._[0].where[0].value;
-        const result = await db.select({
-          count: sql<number>`count(*)`
-        })
-        .from(products)
-        .where(eq(products.category, category));
-        return result[0].count;
-      }
-      // For new collection filter
-      if (query._[0].selection.isNewCollection) {
-        const result = await db.select({
-          count: sql<number>`count(*)`
-        })
-        .from(products)
-        .where(eq(products.isNewCollection, true));
-        return result[0].count;
-      }
-    }
-    
-    // Fallback to counting all products
+  private async getCount(): Promise<number> {
+    // Simple count of all products
     const result = await db.select({
       count: sql<number>`count(*)`
     }).from(products);
@@ -188,15 +158,23 @@ export class DatabaseStorage implements IStorage {
       const offset = (page - 1) * limit;
       console.log("Fetching new collection products page:", page, "at:", new Date().toISOString());
 
-      const baseQuery = db.select().from(products).where(eq(products.isNewCollection, true));
-      const [items, total] = await Promise.all([
-        baseQuery
-          // Order by sold_out status (false first) then by creation date (newest first)
-          .orderBy(products.soldOut, desc(products.createdAt))
-          .limit(limit)
-          .offset(offset),
-        this.getCount(baseQuery)
-      ]);
+      // Execute a direct count query for new collection items
+      const countQuery = await db.select({
+        count: sql<number>`count(*)`
+      })
+      .from(products)
+      .where(eq(products.isNewCollection, true));
+      
+      const total = countQuery[0].count;
+      
+      // Then fetch the actual data
+      const items = await db.select()
+        .from(products)
+        .where(eq(products.isNewCollection, true))
+        // Order by sold_out status (false first) then by creation date (newest first)
+        .orderBy(products.soldOut, desc(products.createdAt))
+        .limit(limit)
+        .offset(offset);
 
       // Check if media needs conversion from string to JSON
       const processedItems = items.map(item => {
@@ -228,20 +206,23 @@ export class DatabaseStorage implements IStorage {
       const offset = (page - 1) * limit;
       console.log("Fetching products by category:", category, "page:", page, "at:", new Date().toISOString());
 
-      // Fix: Don't use a subquery, instead directly query with the filter
-      const [items, total] = await Promise.all([
-        db.select()
-          .from(products)
-          .where(eq(products.category, category))
-          // Order by sold_out status (false first) then by creation date (newest first)
-          .orderBy(products.soldOut, desc(products.createdAt))
-          .limit(limit)
-          .offset(offset),
-        // Count only products in this category
-        this.getCount(
-          db.select().from(products).where(eq(products.category, category))
-        )
-      ]);
+      // Execute a direct count query with the same category filter
+      const countQuery = await db.select({
+        count: sql<number>`count(*)`
+      })
+      .from(products)
+      .where(eq(products.category, category));
+      
+      const total = countQuery[0].count;
+      
+      // Then fetch the actual data with the same filter
+      const items = await db.select()
+        .from(products)
+        .where(eq(products.category, category))
+        // Order by sold_out status (false first) then by creation date (newest first)
+        .orderBy(products.soldOut, desc(products.createdAt))
+        .limit(limit)
+        .offset(offset);
 
       // Check if media needs conversion from string to JSON
       const processedItems = items.map(item => {
