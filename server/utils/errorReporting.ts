@@ -33,10 +33,18 @@ export async function sendErrorNotification(error: Error, options: ErrorNotifica
   const { subject = 'Website Error Alert', stackTrace = error.stack, additionalInfo = {} } = options;
 
   try {
+    // Get environment information
+    const env = process.env.NODE_ENV || 'development';
+    const envStyle = env === 'production' 
+      ? 'background-color: #d32f2f; color: white; font-weight: bold; padding: 3px 6px; border-radius: 3px;'
+      : 'background-color: #388e3c; color: white; font-weight: bold; padding: 3px 6px; border-radius: 3px;';
+    const envTag = env === 'production' ? '🔴 PROD' : '🟢 DEV';
+    
     // Format the error information
     const errorDetails = `
       <h2>Error Details:</h2>
       <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+      <p><strong>Environment:</strong> <span style="${envStyle}">${env.toUpperCase()}</span></p>
       <p><strong>Error:</strong> ${error.message}</p>
       <p><strong>URL:</strong> ${additionalInfo.url || 'Not available'}</p>
       <p><strong>User Agent:</strong> ${additionalInfo.userAgent || 'Not available'}</p>
@@ -47,12 +55,11 @@ export async function sendErrorNotification(error: Error, options: ErrorNotifica
       <h3>Additional Information:</h3>
       <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; overflow: auto;">${JSON.stringify(additionalInfo, null, 2)}</pre>
     `;
-
-    // Email content
-    const mailOptions = {
+  
+  const mailOptions = {
       from: `"Viba Chic Error Monitor" <${process.env.SMTP_USER}>`,
       to: process.env.ADMIN_EMAIL,
-      subject: `${subject} - Viba Chic Website`,
+      subject: `[${envTag}] ${subject} - Viba Chic Website`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #d32f2f; border-bottom: 1px solid #eee; padding-bottom: 10px;">⚠️ Website Error Alert</h1>
