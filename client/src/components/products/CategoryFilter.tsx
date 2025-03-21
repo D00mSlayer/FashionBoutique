@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { categories } from "@shared/schema";
+import { trackCategoryFilter } from "@/lib/analytics";
 
 interface CategoryFilterProps {
   selectedCategory: string | null;
@@ -13,7 +14,10 @@ export function CategoryFilter({ selectedCategory, onSelectCategory }: CategoryF
       <div className="flex space-x-2 p-4">
         <Button
           variant={selectedCategory === null ? "default" : "outline"}
-          onClick={() => onSelectCategory(null)}
+          onClick={() => {
+            trackCategoryFilter('All');
+            onSelectCategory(null);
+          }}
           className="shrink-0"
         >
           All
@@ -22,7 +26,10 @@ export function CategoryFilter({ selectedCategory, onSelectCategory }: CategoryF
           <Button
             key={category}
             variant={selectedCategory === category ? "default" : "outline"}
-            onClick={() => onSelectCategory(category)}
+            onClick={() => {
+              trackCategoryFilter(category);
+              onSelectCategory(category);
+            }}
             className="shrink-0"
           >
             {category}

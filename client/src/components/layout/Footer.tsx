@@ -3,6 +3,7 @@ import { MapPin, Phone, Mail, Heart } from "lucide-react";
 import { config } from "@shared/config";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "wouter";
+import { trackSocialClick } from "@/lib/analytics";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -31,18 +32,33 @@ export function Footer() {
         <div>
           <h3 className="font-semibold mb-4 text-primary">Connect With Us</h3>
           <div className="flex space-x-5 mb-4">
-            <a href={config.social.instagram} target="_blank" rel="noopener noreferrer" 
-               className="hover:text-primary transition-colors duration-200">
+            <a 
+              href={config.social.instagram} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hover:text-primary transition-colors duration-200"
+              onClick={() => trackSocialClick('instagram')}
+            >
               <SiInstagram className="h-6 w-6" />
               <span className="sr-only">Instagram</span>
             </a>
-            <a href={config.social.facebook} target="_blank" rel="noopener noreferrer"
-               className="hover:text-primary transition-colors duration-200">
+            <a 
+              href={config.social.facebook} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-primary transition-colors duration-200"
+              onClick={() => trackSocialClick('facebook')}
+            >
               <SiFacebook className="h-6 w-6" />
               <span className="sr-only">Facebook</span>
             </a>
-            <a href={config.social.whatsapp} target="_blank" rel="noopener noreferrer"
-               className="hover:text-primary transition-colors duration-200">
+            <a 
+              href={config.social.whatsapp} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-primary transition-colors duration-200"
+              onClick={() => trackSocialClick('whatsapp')}
+            >
               <SiWhatsapp className="h-6 w-6" />
               <span className="sr-only">WhatsApp</span>
             </a>

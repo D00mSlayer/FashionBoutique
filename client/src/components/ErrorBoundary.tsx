@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { apiRequest } from '@/lib/queryClient';
+import { trackError } from '@/lib/analytics';
 
 interface Props {
   children: ReactNode;
