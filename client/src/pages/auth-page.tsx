@@ -16,9 +16,12 @@ import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
 import { usePageView } from "@/hooks/use-page-view";
 
+// Secure admin dashboard path - must match the one defined in App.tsx
+const ADMIN_DASHBOARD_PATH = "/admin-dashboard-9e5c7b";
+
 export default function AuthPage() {
-  // Track page view
-  usePageView("Admin Login");
+  // Track page view but with a generic name to avoid revealing it's the admin login in analytics
+  usePageView("Secure Access");
   const { user, loginMutation } = useAuth();
 
   const loginForm = useForm({
@@ -31,16 +34,16 @@ export default function AuthPage() {
 
   // Redirect if already logged in
   if (user) {
-    return <Redirect to="/_dashboard_panel" />;
+    return <Redirect to={ADMIN_DASHBOARD_PATH} />;
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Admin Login</h1>
+          <h1 className="text-2xl font-bold mb-2">Admin Access</h1>
           <p className="text-muted-foreground">
-            Enter your credentials to access the admin panel
+            Enter your credentials to continue
           </p>
         </div>
 

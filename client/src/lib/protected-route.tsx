@@ -5,9 +5,11 @@ import { Redirect, Route } from "wouter";
 export function ProtectedRoute({
   path,
   component: Component,
+  loginPath = "/secure-access-87d31f" // Default to the secure access path
 }: {
   path: string;
   component: () => React.JSX.Element;
+  loginPath?: string;
 }) {
   const { user, isLoading } = useAuth();
 
@@ -24,7 +26,7 @@ export function ProtectedRoute({
   if (!user) {
     return (
       <Route path={path}>
-        <Redirect to="/auth" />
+        <Redirect to={loginPath} />
       </Route>
     );
   }
