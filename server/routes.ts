@@ -5,6 +5,8 @@ import multer from "multer";
 import { insertProductSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { compressImage, compressVideo, isVideo, isImage } from "./utils/mediaProcessor";
+import { sendErrorNotification } from "./utils/errorReporting";
+import { z } from "zod";
 
 // Configure multer for in-memory file storage
 const upload = multer({
@@ -247,6 +249,86 @@ export async function registerRoutes(app: Express) {
       }
     }
   });
+
+  // Client-side error reporting endpoint
+  app.post("/api/error-report", async (req, res) => {
+    try {
+      // Define error report schema
+      const errorReportSchema = z.object({
+        message: z.string(),
+        name: z.string(),
+        stack: z.string().optional().nullable(),
+        componentStack: z.string().optional().nullable(),
+        url: z.string(),
+        userAgent: z.string(),
+        timestamp: z.string(),
+      });
+
+      // Validate request data
+      const validationResult = errorReportSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid error report format", 
+          details: validationResult.error.message 
+        });
+      }
+
+      console.error("Client-side error reported:", req.body.name, req.body.message);
+
+      // Only send email notification in production
+      if (process.env.NODE_ENV === 'production') {
+        // Create an Error object from the report data
+        const reportedError = new Error(req.body.message);
+        reportedError.name = req.body.name;
+        reportedError.stack = req.body.stack || undefined;
+        
+        // Send email notification with detailed information
+        await sendErrorNotification(reportedError, {
+          subject: `Client Error: ${req.body.name}`,
+          stackTrace: req.body.stack || req.body.componentStack,
+          additionalInfo: {
+            componentStack: req.body.componentStack,
+            url: req.body.url,
+            userAgent: req.body.userAgent,
+            timestamp: req.body.timestamp,
+            source: 'client'
+          }
+        });
+      }
+
+      res.status(200).json({ message: "Error report received" });
+    } catch (error) {
+      console.error("Error processing error report:", error);
+      res.status(500).json({ message: "Failed to process error report" });
+    }
+  });
+
+  // Test endpoint to verify error email notifications (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    app.get("/api/test-error-notification", async (req, res) => {
+      try {
+        const testError = new Error("This is a test error notification");
+        testError.name = "TestError";
+        
+        await sendErrorNotification(testError, {
+          subject: "Test Error Notification",
+          additionalInfo: {
+            test: true,
+            timestamp: new Date().toISOString()
+          }
+        });
+        
+        res.json({ message: "Test error notification sent" });
+      } catch (error) {
+        console.error("Failed to send test error notification:", error);
+        res.status(500).json({ 
+          message: "Failed to send test error notification",
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    });
+  }
 
   const httpServer = createServer(app);
   return httpServer;

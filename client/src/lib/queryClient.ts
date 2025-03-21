@@ -7,15 +7,23 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
+export async function apiRequest({
+  method,
+  path,
+  data,
+  headers = {},
+  responseType = 'json'
+}: {
+  method: string;
+  path: string;
+  data?: unknown;
+  headers?: Record<string, string>;
+  responseType?: 'json' | 'text' | 'blob' | 'arrayBuffer' | 'formData';
+}): Promise<any> {
   // Add cache busting parameter for GET requests
   const urlWithNoCaching = method === 'GET' 
-    ? `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`
-    : url;
+    ? `${path}${path.includes('?') ? '&' : '?'}_t=${Date.now()}`
+    : path;
 
   const res = await fetch(urlWithNoCaching, {
     method,
@@ -24,13 +32,28 @@ export async function apiRequest(
       // Add cache control headers
       'Cache-Control': 'no-cache, no-store, must-revalidate',
       'Pragma': 'no-cache',
-      'Expires': '0'
+      'Expires': '0',
+      ...headers
     },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
 
   await throwIfResNotOk(res);
+  
+  // Return the appropriate response format based on responseType
+  if (responseType === 'json') {
+    return await res.json();
+  } else if (responseType === 'text') {
+    return await res.text();
+  } else if (responseType === 'blob') {
+    return await res.blob();
+  } else if (responseType === 'arrayBuffer') {
+    return await res.arrayBuffer();
+  } else if (responseType === 'formData') {
+    return await res.formData();
+  }
+  
   return res;
 }
 

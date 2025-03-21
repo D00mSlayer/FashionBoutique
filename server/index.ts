@@ -2,6 +2,12 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from "./auth";
+import { setupGlobalErrorHandlers, sendErrorNotification } from "./utils/errorReporting";
+
+// Set up global error handlers for email notifications in production
+if (process.env.NODE_ENV === 'production') {
+  setupGlobalErrorHandlers();
+}
 
 const app = express();
 app.use(express.json());
@@ -64,11 +70,32 @@ app.use((req, res, next) => {
   next();
 });
 
-// API error handling middleware
-app.use("/api", (err: any, _req: Request, res: Response, _next: NextFunction) => {
+// API error handling middleware with email notification
+app.use("/api", (err: any, req: Request, res: Response, _next: NextFunction) => {
   const status = err.status || err.statusCode || 500;
   const message = err.message || "Internal Server Error";
+  
+  // Send email notification for server errors in production
+  if (status >= 500 && process.env.NODE_ENV === 'production') {
+    sendErrorNotification(err, {
+      subject: `API Error ${status}`,
+      additionalInfo: {
+        url: req.originalUrl,
+        method: req.method,
+        userAgent: req.get('User-Agent'),
+        ip: req.ip,
+        body: req.body,
+        query: req.query,
+        params: req.params
+      }
+    }).catch(emailErr => {
+      console.error('Failed to send error notification email:', emailErr);
+    });
+  }
 
+  // Log all errors
+  console.error(`API Error (${status}):`, err);
+  
   res.status(status).json({ error: message });
 });
 
