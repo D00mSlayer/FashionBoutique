@@ -31,6 +31,9 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Report the error to our backend API
     this.reportError(error, errorInfo);
+    
+    // Track the error in Google Analytics
+    trackError('react_error_boundary', error.message);
   }
 
   // Send the error to our backend API for email notification
@@ -56,6 +59,8 @@ export class ErrorBoundary extends Component<Props, State> {
       console.log('Error reported to server');
     } catch (reportError) {
       console.error('Failed to report error to server:', reportError);
+      // Track the API error in Google Analytics
+      trackError('error_reporting_failed', 'Failed to send error to backend');
     }
   };
 
