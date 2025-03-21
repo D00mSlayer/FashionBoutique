@@ -7,6 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { usePageView } from "@/hooks/use-page-view";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
 import Contact from "@/pages/Contact";
@@ -16,6 +17,9 @@ import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
+  // Track page views when route changes
+  usePageView();
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
