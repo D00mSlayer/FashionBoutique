@@ -53,7 +53,8 @@ export default function ProductForm() {
       colors: [],
       media: [],
       tags: [],
-      isNewCollection: false
+      isNewCollection: false,
+      soldOut: false
     }
   });
 
@@ -102,6 +103,7 @@ export default function ProductForm() {
       formData.append("description", values.description);
       formData.append("category", values.category);
       formData.append("isNewCollection", String(values.isNewCollection));
+      formData.append("soldOut", String(values.soldOut));
 
       // Add arrays as JSON strings
       formData.append("sizes", JSON.stringify(values.sizes));

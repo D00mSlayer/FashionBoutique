@@ -166,6 +166,15 @@ export function ProductCard({ product }: ProductCardProps) {
                     New Collection
                   </Badge>
                 )}
+
+                {/* Sold Out Overlay */}
+                {product.soldOut && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                    <div className="bg-black/70 text-white px-6 py-3 font-bold text-lg uppercase transform -rotate-12 pointer-events-none">
+                      Sold Out
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -202,8 +211,9 @@ export function ProductCard({ product }: ProductCardProps) {
         <Button
           className="w-full"
           onClick={() => openWhatsApp(product)}
+          disabled={product.soldOut}
         >
-          Inquire on WhatsApp
+          {product.soldOut ? "Sold Out" : "Inquire on WhatsApp"}
         </Button>
       </CardFooter>
 

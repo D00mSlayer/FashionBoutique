@@ -114,8 +114,8 @@ export class DatabaseStorage implements IStorage {
 
       const [items, total] = await Promise.all([
         db.select().from(products)
-          // Order by creation date for now (we'll add sold_out ordering after migration)
-          .orderBy(desc(products.createdAt))
+          // Order by sold_out status (false first) then by creation date (newest first)
+          .orderBy(products.soldOut, desc(products.createdAt))
           .limit(limit)
           .offset(offset),
         this.getCount()
@@ -175,8 +175,8 @@ export class DatabaseStorage implements IStorage {
       const baseQuery = db.select().from(products).where(eq(products.isNewCollection, true));
       const [items, total] = await Promise.all([
         baseQuery
-          // Order by creation date for now (we'll add sold_out ordering after migration)
-          .orderBy(desc(products.createdAt))
+          // Order by sold_out status (false first) then by creation date (newest first)
+          .orderBy(products.soldOut, desc(products.createdAt))
           .limit(limit)
           .offset(offset),
         this.getCount(baseQuery)
@@ -215,8 +215,8 @@ export class DatabaseStorage implements IStorage {
       const filteredProducts = db.select().from(products).where(eq(products.category, category));
       const [items, total] = await Promise.all([
         db.select().from(filteredProducts)
-          // Order by creation date for now (we'll add sold_out ordering after migration)
-          .orderBy(desc(products.createdAt))
+          // Order by sold_out status (false first) then by creation date (newest first)
+          .orderBy(products.soldOut, desc(products.createdAt))
           .limit(limit)
           .offset(offset),
         this.getCount(products)
