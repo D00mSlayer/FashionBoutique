@@ -32,12 +32,27 @@ export function initializeAnalytics(measurementId: string) {
   script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
   document.head.appendChild(script);
 
-  // Initialize GA4 properly
+  // Standard GA4 initialization code exactly as prescribed by Google
   window.dataLayer = window.dataLayer || [];
+  function gtag(...args: any[]){
+    window.dataLayer.push(args);
+  }
+  window.gtag = gtag as any;
   window.gtag('js', new Date());
   window.gtag('config', measurementId, {
-    send_page_view: false // We'll handle page views manually for more control
+    debug_mode: true // Enable debug mode to help diagnose issues
   });
+  
+  // Also send an immediate page view event to verify tracking
+  setTimeout(() => {
+    window.gtag('event', 'page_view', {
+      page_title: document.title,
+      page_location: window.location.href,
+      page_path: window.location.pathname,
+      send_to: measurementId
+    });
+    console.log('Initial page view sent directly to GA');
+  }, 1000);
   
   console.log('Google Analytics initialization complete');
 }

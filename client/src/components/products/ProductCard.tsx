@@ -28,28 +28,49 @@ export function ProductCard({ product }: ProductCardProps) {
   // Minimum swipe distance for navigation (in pixels)
   const minSwipeDistance = 50;
 
+  // Touch handling with proper prevention of image loading issues
   const onTouchStart = (e: TouchEvent) => {
+    // Store starting touch position
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
 
   const onTouchMove = (e: TouchEvent) => {
+    // Only track horizontal movement for swiping
     setTouchEnd(e.targetTouches[0].clientX);
+    
+    // If we're doing a significant horizontal swipe, prevent default to avoid image zoom behavior
+    if (touchStart && Math.abs(touchStart - e.targetTouches[0].clientX) > 10) {
+      e.preventDefault();
+    }
   };
 
-  const onTouchEnd = () => {
+  const onTouchEnd = (e: any) => {
+    // Prevent default action to avoid the "ghost touch" issue on mobile
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+    
+    // Only process as a swipe if we have both touch points
     if (!touchStart || !touchEnd) return;
 
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
 
+    // Only process as a swipe if the movement was significant
     if (isLeftSwipe) {
       nextMedia();
-    }
-    if (isRightSwipe) {
+    } else if (isRightSwipe) {
       previousMedia();
+    } else if (Math.abs(distance) < 10) {
+      // This was likely a tap, not a swipe - open the preview
+      setShowPreview(true);
     }
+    
+    // Reset touch tracking
+    setTouchStart(null);
+    setTouchEnd(null);
   };
 
   const nextMedia = () => {
@@ -114,7 +135,7 @@ export function ProductCard({ product }: ProductCardProps) {
               className="relative aspect-square"
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
-              onTouchEnd={onTouchEnd}
+              onTouchEnd={(e: any) => onTouchEnd(e)}
             >
             {product.media.length > 0 ? (
               <>
