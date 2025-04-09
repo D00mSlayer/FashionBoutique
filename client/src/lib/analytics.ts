@@ -1,39 +1,68 @@
 declare global {
   interface Window {
     dataLayer: any[];
+    gtag: (...args: any[]) => void;
   }
 }
 
-// Initialize dataLayer array if it doesn't exist
-window.dataLayer = window.dataLayer || [];
-
-// Basic GTM/GA4 function
+// Standard gtag function implementation
 function gtag(...args: any[]) {
+  window.dataLayer = window.dataLayer || [];
+  // Using spread operator to properly handle arguments
   window.dataLayer.push(args);
 }
 
+// Assign gtag to window to ensure it's globally available
+window.gtag = window.gtag || function(...args: any[]) {
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push(args);
+};
+
 export function initializeAnalytics(measurementId: string) {
-  // Add Google Analytics script
+  if (!measurementId) {
+    console.error('Google Analytics Measurement ID is missing');
+    return;
+  }
+  
+  console.log('Initializing Google Analytics with ID:', measurementId);
+  
+  // Add the Google Analytics script tag
   const script = document.createElement('script');
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
   document.head.appendChild(script);
 
-  // Initialize GA4
-  gtag('js', new Date());
-  gtag('config', measurementId);
+  // Initialize GA4 properly
+  window.dataLayer = window.dataLayer || [];
+  window.gtag('js', new Date());
+  window.gtag('config', measurementId, {
+    send_page_view: false // We'll handle page views manually for more control
+  });
+  
+  console.log('Google Analytics initialization complete');
 }
 
 // Track custom events
 export function trackEvent(eventName: string, parameters?: { [key: string]: any }) {
-  gtag('event', eventName, parameters);
+  if (!window.gtag) {
+    console.warn('Google Analytics not initialized: trackEvent failed');
+    return;
+  }
+  console.log('Tracking event:', eventName, parameters);
+  window.gtag('event', eventName, parameters);
 }
 
 // Track page views
 export function trackPageView(pagePath: string, pageTitle?: string) {
-  gtag('event', 'page_view', {
+  if (!window.gtag) {
+    console.warn('Google Analytics not initialized: trackPageView failed');
+    return;
+  }
+  console.log('Tracking page view:', pagePath, pageTitle);
+  window.gtag('event', 'page_view', {
     page_path: pagePath,
-    page_title: pageTitle
+    page_title: pageTitle || document.title,
+    page_location: window.location.href
   });
 }
 
@@ -43,9 +72,14 @@ export function trackProductView(product: {
   name: string;
   category: string;
 }) {
-  gtag('event', 'view_item', {
+  if (!window.gtag) {
+    console.warn('Google Analytics not initialized: trackProductView failed');
+    return;
+  }
+  console.log('Tracking product view:', product);
+  window.gtag('event', 'view_item', {
     items: [{
-      item_id: product.id,
+      item_id: product.id.toString(),
       item_name: product.name,
       item_category: product.category
     }]
@@ -58,8 +92,13 @@ export function trackWhatsAppInquiry(product: {
   name: string;
   category: string;
 }) {
-  gtag('event', 'whatsapp_inquiry', {
-    item_id: product.id,
+  if (!window.gtag) {
+    console.warn('Google Analytics not initialized: trackWhatsAppInquiry failed');
+    return;
+  }
+  console.log('Tracking WhatsApp inquiry:', product);
+  window.gtag('event', 'whatsapp_inquiry', {
+    item_id: product.id.toString(),
     item_name: product.name,
     item_category: product.category
   });
@@ -67,14 +106,24 @@ export function trackWhatsAppInquiry(product: {
 
 // Track social media clicks
 export function trackSocialClick(platform: string) {
-  gtag('event', 'social_click', {
+  if (!window.gtag) {
+    console.warn('Google Analytics not initialized: trackSocialClick failed');
+    return;
+  }
+  console.log('Tracking social click:', platform);
+  window.gtag('event', 'social_click', {
     platform: platform
   });
 }
 
 // Track category filter usage
 export function trackCategoryFilter(category: string) {
-  gtag('event', 'filter_selection', {
+  if (!window.gtag) {
+    console.warn('Google Analytics not initialized: trackCategoryFilter failed');
+    return;
+  }
+  console.log('Tracking category filter:', category);
+  window.gtag('event', 'filter_selection', {
     filter_type: 'category',
     filter_value: category
   });
@@ -82,7 +131,12 @@ export function trackCategoryFilter(category: string) {
 
 // Track errors
 export function trackError(errorType: string, errorMessage: string) {
-  gtag('event', 'application_error', {
+  if (!window.gtag) {
+    console.warn('Google Analytics not initialized: trackError failed');
+    return;
+  }
+  console.log('Tracking error:', errorType, errorMessage);
+  window.gtag('event', 'application_error', {
     error_type: errorType,
     error_message: errorMessage
   });
