@@ -5,7 +5,7 @@ import { openWhatsApp } from "@/lib/whatsapp";
 import { trackProductView } from "@/lib/analytics";
 import { ImagePreview } from "./ImagePreview";
 import type { Product } from "@shared/schema";
-import { useState, useRef, TouchEvent, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 
 interface ProductCardProps {
@@ -14,8 +14,6 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const mediaRef = useRef<HTMLDivElement>(null);
@@ -25,53 +23,35 @@ export function ProductCard({ product }: ProductCardProps) {
     return url.includes('data:video') || url.toLowerCase().endsWith('.mp4');
   };
 
-  // Minimum swipe distance for navigation (in pixels)
-  const minSwipeDistance = 50;
-
-  // Touch handling with proper prevention of image loading issues
-  const onTouchStart = (e: TouchEvent) => {
-    // Store starting touch position
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const onTouchMove = (e: TouchEvent) => {
-    // Only track horizontal movement for swiping
-    setTouchEnd(e.targetTouches[0].clientX);
+  // Fix for mobile touch issues - prevents images from turning white
+  useEffect(() => {
+    // Get the image element in this component
+    const productImage = mediaRef.current?.querySelector('img');
+    if (!productImage) return;
     
-    // If we're doing a significant horizontal swipe, prevent default to avoid image zoom behavior
-    if (touchStart && Math.abs(touchStart - e.targetTouches[0].clientX) > 10) {
+    // Prevent default touch behaviors that cause the white image issue
+    const disableTouchEffects = (e: Event) => {
       e.preventDefault();
-    }
-  };
-
-  const onTouchEnd = (e: any) => {
-    // Prevent default action to avoid the "ghost touch" issue on mobile
-    if (e && e.preventDefault) {
-      e.preventDefault();
-    }
+      e.stopPropagation();
+    };
     
-    // Only process as a swipe if we have both touch points
-    if (!touchStart || !touchEnd) return;
-
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    // Only process as a swipe if the movement was significant
-    if (isLeftSwipe) {
-      nextMedia();
-    } else if (isRightSwipe) {
-      previousMedia();
-    } else if (Math.abs(distance) < 10) {
-      // This was likely a tap, not a swipe - open the preview
-      setShowPreview(true);
-    }
+    // Add event listeners to prevent problematic browser behaviors
+    productImage.addEventListener('contextmenu', disableTouchEffects);
+    productImage.addEventListener('touchstart', disableTouchEffects, { passive: false });
+    productImage.addEventListener('touchmove', disableTouchEffects, { passive: false });
     
-    // Reset touch tracking
-    setTouchStart(null);
-    setTouchEnd(null);
-  };
+    // Apply CSS properties as inline styles
+    productImage.setAttribute('style', 
+      'touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;'
+    );
+    
+    // Clean up event listeners when component unmounts
+    return () => {
+      productImage.removeEventListener('contextmenu', disableTouchEffects);
+      productImage.removeEventListener('touchstart', disableTouchEffects);
+      productImage.removeEventListener('touchmove', disableTouchEffects);
+    };
+  }, [currentMediaIndex]);
 
   const nextMedia = () => {
     setCurrentMediaIndex((prev) =>
@@ -133,9 +113,6 @@ export function ProductCard({ product }: ProductCardProps) {
             <div 
               ref={mediaRef}
               className="relative aspect-square"
-              onTouchStart={onTouchStart}
-              onTouchMove={onTouchMove}
-              onTouchEnd={(e: any) => onTouchEnd(e)}
             >
             {product.media.length > 0 ? (
               <>
